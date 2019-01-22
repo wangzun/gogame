@@ -15,19 +15,22 @@ import (
 	"golang.org/x/mobile/event/touch"
 	"golang.org/x/mobile/gl"
 
+	"github.com/wangzun/gogame/engine/camera"
 	"github.com/wangzun/gogame/engine/core"
+	"github.com/wangzun/gogame/engine/gls"
+	"github.com/wangzun/gogame/engine/math32"
 	"github.com/wangzun/gogame/engine/util/logger"
 )
 
 type Application struct {
-	core.Dispatcher   // Embedded event dispatcher
-	core.TimerManager // Embedded timer manager
-	// gl                *gls.GLS              // OpenGL state
-	log *logger.Logger // Default application logger
+	core.Dispatcher                  // Embedded event dispatcher
+	core.TimerManager                // Embedded timer manager
+	gl                *gls.GLS       // OpenGL state
+	log               *logger.Logger // Default application logger
 	// renderer     *renderer.Renderer    // Renderer object
-	// camPersp   *camera.Perspective   // Perspective camera
-	// camOrtho   *camera.Orthographic  // Orthographic camera
-	// camera     camera.ICamera        // Current camera
+	camPersp *camera.Perspective  // Perspective camera
+	camOrtho *camera.Orthographic // Orthographic camera
+	camera   camera.ICamera       // Current camera
 	// orbit      *control.OrbitControl // Camera orbit controller
 	frameRater *FrameRater // Render loop frame rater
 	// scene        *core.Node            // Node container for 3D tests
@@ -174,10 +177,10 @@ func (app *Application) Log() *logger.Logger {
 }
 
 // Gl returns the OpenGL state
-// func (app *Application) Gl() *gls.GLS {
+func (app *Application) Gl() *gls.GLS {
 
-// 	return app.gl
-// }
+	return app.gl
+}
 
 // Scene returns the current application 3D scene
 // func (app *Application) Scene() *core.Node {
@@ -339,6 +342,7 @@ func (app *Application) Run() error {
 				switch e.Crosses(lifecycle.StageVisible) {
 				case lifecycle.CrossOn:
 					glctx, _ = e.DrawContext.(gl.Context)
+					app.InitGls(glctx)
 					a.Send(paint.Event{})
 				case lifecycle.CrossOff:
 				}
@@ -353,6 +357,7 @@ func (app *Application) Run() error {
 					// events sent by the system.
 					continue
 				}
+				app.ClearUI()
 				app.Loop()
 
 				a.Publish()
@@ -377,6 +382,10 @@ func (app *Application) Loop() error {
 	// Process application timers
 	app.ProcessTimers()
 
+	cc := math32.NewColor("gray")
+	app.gl.ClearColor(cc.R, cc.G, cc.B, 1)
+	app.gl.Clear(gls.DEPTH_BUFFER_BIT | gls.STENCIL_BUFFER_BIT | gls.COLOR_BUFFER_BIT)
+
 	// Dispatch before render event
 	app.Dispatch(OnBeforeRender, nil)
 
@@ -400,4 +409,62 @@ func (app *Application) Loop() error {
 	app.frameCount++
 
 	return nil
+}
+
+func (app *Application) ClearUI() {
+	cc := math32.NewColor("gray")
+	app.gl.ClearColor(cc.R, cc.G, cc.B, 1)
+	app.gl.Clear(gls.DEPTH_BUFFER_BIT | gls.STENCIL_BUFFER_BIT | gls.COLOR_BUFFER_BIT)
+}
+
+func (app *Application) CreateCamera() {
+	aspect := float32(750) / float32(1334)
+	app.camPersp = camera.NewPerspective(65, aspect, 0.01, 1000)
+
+	// Creates orthographic camera
+	app.camOrtho = camera.NewOrthographic(-2, 2, 2, -2, 0.01, 100)
+	app.camOrtho.SetPosition(0, 0, 3)
+	app.camOrtho.LookAt(&math32.Vector3{0, 0, 0})
+	app.camOrtho.SetZoom(1.0)
+
+	// Default camera is perspective
+	app.camera = app.camPersp
+}
+
+func (app *Application) InitGls(glctx gl.Context) {
+	gl, err := gls.New(glctx)
+	if err != nil {
+		app.log.Error("init gls error : %s ", err)
+		panic(err)
+	}
+	app.gl = gl
+	// Checks OpenGL errors
+	app.gl.SetCheckErrors(!*app.noglErrors)
+
+	// Logs OpenGL version
+	glVersion := app.Gl().GetString(gls.VERSION)
+	app.log.Info("OpenGL version: %s", glVersion)
+
+	// Clears the screen
+	app.ClearUI()
+
+	// Creates camera
+	app.CreateCamera()
+
+	// Creates orbit camera control
+	// It is important to do this after the root panel subscription
+	// to avoid GUI events being propagated to the orbit control.
+	// app.orbit = control.NewOrbitControl(app.camera, app.win)
+
+	// Creates scene for 3D objects
+	// app.scene = core.NewNode()
+
+	// Creates renderer
+	// app.renderer = renderer.NewRenderer(gl)
+	// err = app.renderer.AddDefaultShaders()
+	// if err != nil {
+	// 	return nil, fmt.Errorf("Error from AddDefaulShaders:%v", err)
+	// }
+	// app.renderer.SetScene(app.scene)
+
 }

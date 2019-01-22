@@ -5,6 +5,8 @@
 package gls
 
 import (
+	"bytes"
+	"encoding/gob"
 	"math"
 	"unsafe"
 
@@ -25,10 +27,10 @@ type GLS struct {
 	viewportWidth       int32             // cached last set viewport width
 	viewportHeight      int32             // cached last set viewport height
 	lineWidth           float32           // cached last set line width
-	sideView            int               // cached last set triangle side view mode
+	sideView            int64             // cached last set triangle side view mode
 	frontFace           uint32            // cached last set glFrontFace value
 	depthFunc           uint32            // cached last set depth function
-	depthMask           int               // cached last set depth mask
+	depthMask           int64             // cached last set depth mask
 	capabilities        map[int]int       // cached capabilities (Enable/Disable)
 	blendEquation       uint32            // cached last set blend equation value
 	blendSrc            uint32            // cached last set blend src value
@@ -85,10 +87,11 @@ const (
 // which encapsulates the state of an OpenGL context.
 // This should be called only after an active OpenGL context
 // is established, such as by creating a new window.
-func New() (*GLS, error) {
+func New(context gl.Context) (*GLS, error) {
 
 	gs := new(GLS)
 	gs.reset()
+	gs.SetContext(context)
 	gs.setDefaultState()
 	gs.checkErrors = true
 
@@ -588,11 +591,22 @@ func (gs *GLS) ShaderSource(shader gl.Shader, src string) {
 }
 
 // TexImage2D specifies a two-dimensional texture image.
-func (gs *GLS) TexImage2D(target uint32, level int32, iformat int32, width int32, height int32, border int32, format uint32, itype uint32, data []byte) {
 
+// "encoding/gob"
+// "bytes"
+
+func (gs *GLS) TexImage2D(target uint32, level int32, iformat int32, width int32, height int32, border int32, format uint32, itype uint32, tex interface{}) {
+
+	data, _ := GetBytes(tex)
 	gs.context.TexImage2D(gl.Enum(target), int(level), int(iformat), int(width), int(height), gl.Enum(format), gl.Enum(itype), data)
 
 }
+
+// func (gs *GLS) TexImage2D(target uint32, level int32, iformat int32, width int32, height int32, border int32, format uint32, itype uint32, data []byte) {
+
+// 	gs.context.TexImage2D(gl.Enum(target), int(level), int(iformat), int(width), int(height), gl.Enum(format), gl.Enum(itype), data)
+
+// }
 
 // TexParameteri sets the specified texture parameter on the specified texture.
 func (gs *GLS) TexParameteri(target uint32, pname uint32, param int32) {
@@ -688,7 +702,7 @@ func (gs *GLS) Uniform1fv(location gl.Uniform, count int32, v []float32) {
 }
 
 // Uniform2fv sets the value of one or many vec2 uniform variables for the current program object.
-func (gs *GLS) Uniform2fv(location gl.Uniform, count int32, src []float32) {
+func (gs *GLS) Uniform2fv(location gl.Uniform, src []float32) {
 
 	gs.context.Uniform2fv(location, src)
 
@@ -767,4 +781,14 @@ func (gs *GLS) UseProgram(prog *Program) {
 		gs.programs[prog] = true
 		log.Debug("New Program activated. Total: %d", len(gs.programs))
 	}
+}
+
+func GetBytes(key interface{}) ([]byte, error) {
+	var buf bytes.Buffer
+	enc := gob.NewEncoder(&buf)
+	err := enc.Encode(key)
+	if err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
 }

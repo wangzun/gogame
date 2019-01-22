@@ -1,8 +1,9 @@
 package main
 
 import (
-	"github.com/g3n/engine/geometry"
-	"github.com/wangzun/gogame/engine/math32"
+	"log"
+
+	"github.com/wangzun/gogame/engine/texture"
 	"github.com/wangzun/gogame/engine/util/application"
 )
 
@@ -10,9 +11,9 @@ import (
 // 	start()
 // appInfo, _ := application.Create(application.Options{})
 // // Create a blue torus and add it to the scene
-// geom := geometry.NewTorus(1, .4, 12, 32, math32.Pi*2)
-// mat := material.NewPhong(math32.NewColor("DarkBlue"))
-// torusMesh := graphic.NewMesh(geom, mat)
+//  geom := geometry.NewTorus(1, .4, 12, 32, math32.Pi*2)
+//  mat := material.NewPhong(math32.NewColor("DarkBlue"))
+//  torusMesh := graphic.NewMesh(geom, mat)
 // app.Scene().Add(torusMesh)
 
 // // Add lights to the scene
@@ -31,7 +32,9 @@ import (
 // }
 
 func main() {
+	xxx := texture.Animator{}
+	log.Println(xxx)
 	app, _ := application.Create(application.Options{})
-	geom := geometry.NewTorus(1, .4, 12, 32, math32.Pi*2)
+	// geom := geometry.NewTorus(1, .4, 12, 32, math32.Pi*2)
 	app.Run()
 }
