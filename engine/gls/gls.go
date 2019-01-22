@@ -7,6 +7,7 @@ package gls
 import (
 	"bytes"
 	"encoding/gob"
+	"fmt"
 	"math"
 	"unsafe"
 
@@ -706,6 +707,8 @@ func (gs *GLS) Uniform2fv(location gl.Uniform, src []float32) {
 
 	gs.context.Uniform2fv(location, src)
 
+	fmt.Println("Uniform2fv")
+
 	gs.stats.Unisets++
 }
 
@@ -722,6 +725,8 @@ func (gs *GLS) Uniform3fv(location gl.Uniform, src []float32) {
 
 	gs.context.Uniform3fv(location, src)
 
+	fmt.Println("Uniform3fv")
+
 	gs.stats.Unisets++
 }
 
@@ -735,6 +740,8 @@ func (gs *GLS) Uniform3fv(location gl.Uniform, src []float32) {
 func (gs *GLS) Uniform4fv(location gl.Uniform, v []float32) {
 
 	gs.context.Uniform4fv(location, v)
+
+	fmt.Println("Uniform4fv")
 	gs.stats.Unisets++
 }
 
