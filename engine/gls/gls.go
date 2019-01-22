@@ -718,7 +718,7 @@ func (gs *GLS) Uniform2fv(location gl.Uniform, src []float32) {
 // }
 
 // Uniform3fv sets the value of one or many vec3 uniform variables for the current program object.
-func (gs *GLS) Uniform3fv(location gl.Uniform, count int32, src []float32) {
+func (gs *GLS) Uniform3fv(location gl.Uniform, src []float32) {
 
 	gs.context.Uniform3fv(location, src)
 
@@ -732,7 +732,7 @@ func (gs *GLS) Uniform3fv(location gl.Uniform, count int32, src []float32) {
 // }
 
 // Uniform4fv sets the value of one or many vec4 uniform variables for the current program object.
-func (gs *GLS) Uniform4fv(location gl.Uniform, count int32, v []float32) {
+func (gs *GLS) Uniform4fv(location gl.Uniform, v []float32) {
 
 	gs.context.Uniform4fv(location, v)
 	gs.stats.Unisets++
