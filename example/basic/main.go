@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 
+	"github.com/wangzun/gogame/engine/geometry"
 	"github.com/wangzun/gogame/engine/texture"
 	"github.com/wangzun/gogame/engine/util/application"
 )
@@ -34,6 +35,7 @@ import (
 func main() {
 	xxx := texture.Animator{}
 	log.Println(xxx)
+	yyy := geometry.Geometry{}
 	app, _ := application.Create(application.Options{})
 	// geom := geometry.NewTorus(1, .4, 12, 32, math32.Pi*2)
 	app.Run()

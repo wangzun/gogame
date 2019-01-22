@@ -5,6 +5,8 @@
 package math32
 
 import (
+	"encoding/binary"
+	"fmt"
 	"unsafe"
 )
 
@@ -238,4 +240,31 @@ func (a *ArrayU32) Len() int {
 func (a *ArrayU32) Append(v ...uint32) {
 
 	*a = append(*a, v...)
+}
+
+func (a *ArrayU32) List(byteOrder binary.ByteOrder) []byte {
+	le := false
+	switch byteOrder {
+	case binary.BigEndian:
+	case binary.LittleEndian:
+		le = true
+	default:
+		panic(fmt.Sprintf("invalid byte order %v", byteOrder))
+	}
+
+	b := make([]byte, 4*len(*a))
+	for i, u := range *a {
+		if le {
+			b[4*i+0] = byte(u >> 0)
+			b[4*i+1] = byte(u >> 8)
+			b[4*i+2] = byte(u >> 16)
+			b[4*i+3] = byte(u >> 24)
+		} else {
+			b[4*i+0] = byte(u >> 24)
+			b[4*i+1] = byte(u >> 16)
+			b[4*i+2] = byte(u >> 8)
+			b[4*i+3] = byte(u >> 0)
+		}
+	}
+	return b
 }
