@@ -308,6 +308,8 @@ func (vbo *VBO) Transfer(gs *GLS) {
 		for _, attrib := range vbo.attribs {
 			// Get attribute location in the current program
 			loc := gs.prog.GetAttribLocation(attrib.Name)
+			// fmt.Println(loc, attrib.Name)
+			// fmt.Println(vbo.buffer)
 			if loc.Value < 0 {
 				log.Warn("Attribute not found: %v", attrib.Name)
 				continue
@@ -323,6 +325,9 @@ func (vbo *VBO) Transfer(gs *GLS) {
 	if !vbo.update {
 		return
 	}
+
+	// fmt.Println(vbo.handle, vbo.attribs)
+	// fmt.Println(vbo.buffer)
 
 	// Transfer the VBO data to OpenGL
 	gs.BindBuffer(ARRAY_BUFFER, vbo.handle)

@@ -543,8 +543,9 @@ func (g *Geometry) RenderSetup(gs *gls.GLS) {
 	for _, vbo := range g.vbos {
 		vbo.Transfer(gs)
 	}
+	// gs.BindBuffer(gls.ELEMENT_ARRAY_BUFFER, g.handleIndices)
 
-	// Update Indices buffer if necessary
+	// // Update Indices buffer if necessary
 	if g.indices.Size() > 0 && g.updateIndices {
 		gs.BindBuffer(gls.ELEMENT_ARRAY_BUFFER, g.handleIndices)
 		gs.BufferData(gls.ELEMENT_ARRAY_BUFFER, g.indices.Bytes(), g.indices.List(binary.LittleEndian), gls.STATIC_DRAW)

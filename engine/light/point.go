@@ -122,6 +122,7 @@ func (lp *Point) RenderSetup(gs *gls.GLS, rinfo *core.RenderInfo, idx int) {
 		lp.udata.linearDecay,    // float32        // Distance linear decay factor
 		lp.udata.quadraticDecay, //float32        // Distance quadratic decay factor
 		lp.udata.dummy}
+	// fmt.Println(lp.udata)
 	gs.Uniform3fv(gl.Uniform{Value: location}, data)
 
 }

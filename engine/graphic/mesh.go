@@ -113,7 +113,7 @@ func (m *Mesh) RenderSetup(gs *gls.GLS, rinfo *core.RenderInfo) {
 	nm.GetNormalMatrix(mvm)
 	location = m.uniNm.Location(gs)
 	// gs.UniformMatrix3fv(location, 1, false, &nm[0])
-	gs.UniformMatrix4fv(gl.Uniform{Value: location}, 1, false, nm[:])
+	gs.UniformMatrix3fv(gl.Uniform{Value: location}, 1, false, nm[:])
 }
 
 // Raycast checks intersections between this geometry and the specified raycaster

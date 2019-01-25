@@ -19,21 +19,22 @@ import (
 	"github.com/wangzun/gogame/engine/core"
 	"github.com/wangzun/gogame/engine/gls"
 	"github.com/wangzun/gogame/engine/math32"
+	"github.com/wangzun/gogame/engine/renderer"
 	"github.com/wangzun/gogame/engine/util/logger"
 )
 
 type Application struct {
-	core.Dispatcher                  // Embedded event dispatcher
-	core.TimerManager                // Embedded timer manager
-	gl                *gls.GLS       // OpenGL state
-	log               *logger.Logger // Default application logger
-	// renderer     *renderer.Renderer    // Renderer object
-	camPersp *camera.Perspective  // Perspective camera
-	camOrtho *camera.Orthographic // Orthographic camera
-	camera   camera.ICamera       // Current camera
+	core.Dispatcher                        // Embedded event dispatcher
+	core.TimerManager                      // Embedded timer manager
+	gl                *gls.GLS             // OpenGL state
+	log               *logger.Logger       // Default application logger
+	renderer          *renderer.Renderer   // Renderer object
+	camPersp          *camera.Perspective  // Perspective camera
+	camOrtho          *camera.Orthographic // Orthographic camera
+	camera            camera.ICamera       // Current camera
 	// orbit      *control.OrbitControl // Camera orbit controller
-	frameRater *FrameRater // Render loop frame rater
-	// scene        *core.Node            // Node container for 3D tests
+	frameRater   *FrameRater   // Render loop frame rater
+	scene        *core.Node    // Node container for 3D tests
 	frameCount   uint64        // Frame counter
 	frameTime    time.Time     // Time at the start of the frame
 	frameDelta   time.Duration // Time delta from previous frame
@@ -104,7 +105,12 @@ func Create(ops Options) (*Application, error) {
 
 	// Creates application logger
 	app.log = logger.New(ops.LogPrefix, nil)
-	app.log.AddWriter(logger.NewConsole(false))
+	app.log.AddWriter(logger.NewConsole(true))
+	nnet, err := logger.NewNet("tcp", "192.168.1.40:6666")
+	if err == nil {
+		app.log.AddWriter(nnet)
+		app.log.Info("init net log succ")
+	}
 	app.log.SetFormat(logger.FTIME | logger.FMICROS)
 	app.log.SetLevel(ops.LogLevel)
 
@@ -146,8 +152,9 @@ func Create(ops Options) (*Application, error) {
 	// to avoid GUI events being propagated to the orbit control.
 	// app.orbit = control.NewOrbitControl(app.camera, app.win)
 
+	app.CreateCamera()
 	// Creates scene for 3D objects
-	// app.scene = core.NewNode()
+	app.scene = core.NewNode()
 
 	// Creates renderer
 	// app.renderer = renderer.NewRenderer(gl)
@@ -183,16 +190,16 @@ func (app *Application) Gl() *gls.GLS {
 }
 
 // Scene returns the current application 3D scene
-// func (app *Application) Scene() *core.Node {
+func (app *Application) Scene() *core.Node {
 
-// 	return app.scene
-// }
+	return app.scene
+}
 
 // SetScene sets the 3D scene to be rendered
-// func (app *Application) SetScene(scene *core.Node) {
+func (app *Application) SetScene(scene *core.Node) {
 
-// 	app.renderer.SetScene(scene)
-// }
+	app.renderer.SetScene(scene)
+}
 
 // // SetPanel3D sets the gui panel inside which the 3D scene is shown.
 // func (app *Application) SetPanel3D(panel3D gui.IPanel) {
@@ -207,28 +214,28 @@ func (app *Application) Gl() *gls.GLS {
 // }
 
 // CameraPersp returns the application perspective camera
-// func (app *Application) CameraPersp() *camera.Perspective {
+func (app *Application) CameraPersp() *camera.Perspective {
 
-// 	return app.camPersp
-// }
+	return app.camPersp
+}
 
 // CameraOrtho returns the application orthographic camera
-// func (app *Application) CameraOrtho() *camera.Orthographic {
+func (app *Application) CameraOrtho() *camera.Orthographic {
 
-// 	return app.camOrtho
-// }
+	return app.camOrtho
+}
 
 // Camera returns the current application camera
-// func (app *Application) Camera() camera.ICamera {
+func (app *Application) Camera() camera.ICamera {
 
-// 	return app.camera
-// }
+	return app.camera
+}
 
 // SetCamera sets the current application camera
-// func (app *Application) SetCamera(cam camera.ICamera) {
+func (app *Application) SetCamera(cam camera.ICamera) {
 
-// 	app.camera = cam
-// }
+	app.camera = cam
+}
 
 // // Orbit returns the current camera orbit control
 // func (app *Application) Orbit() *control.OrbitControl {
@@ -280,10 +287,10 @@ func (app *Application) RunSeconds() float32 {
 }
 
 // Renderer returns the application renderer
-// func (app *Application) Renderer() *renderer.Renderer {
+func (app *Application) Renderer() *renderer.Renderer {
 
-// 	return app.renderer
-// }
+	return app.renderer
+}
 
 // SetCPUProfile must be called before Run() and sets the file name for cpu profiling.
 // If set the cpu profiling starts before running the render loop and continues
@@ -345,6 +352,7 @@ func (app *Application) Run() error {
 					app.InitGls(glctx)
 					a.Send(paint.Event{})
 				case lifecycle.CrossOff:
+					break
 				}
 			case size.Event:
 				//sz = e
@@ -357,10 +365,10 @@ func (app *Application) Run() error {
 					// events sent by the system.
 					continue
 				}
-				app.ClearUI()
+				// app.ClearUI()
 				app.Loop()
-
 				a.Publish()
+
 				a.Send(paint.Event{})
 			case touch.Event:
 				//touchX = e.X
@@ -372,6 +380,14 @@ func (app *Application) Run() error {
 }
 
 func (app *Application) Loop() error {
+
+	defer func() {
+		if err := recover(); err != nil {
+			str := fmt.Sprintln(err)
+			app.log.Error("recover err : %s", str)
+		}
+	}()
+
 	app.frameRater.Start()
 
 	// Updates frame start and time delta in context
@@ -382,25 +398,16 @@ func (app *Application) Loop() error {
 	// Process application timers
 	app.ProcessTimers()
 
-	cc := math32.NewColor("gray")
-	app.gl.ClearColor(cc.R, cc.G, cc.B, 1)
-	app.gl.Clear(gls.DEPTH_BUFFER_BIT | gls.STENCIL_BUFFER_BIT | gls.COLOR_BUFFER_BIT)
-
 	// Dispatch before render event
 	app.Dispatch(OnBeforeRender, nil)
 
 	// Renders the current scene and/or gui
-	// rendered, err := app.renderer.Render(app.camera)
-	// if err != nil {
-	// 	// panic(err)
-	// }
-
-	// // Poll input events and process them
-
-	// if rendered {
-	// 	a.Publish()
-	// }
-
+	_, err := app.renderer.Render(app.camera)
+	if err != nil {
+		panic(err)
+	}
+	// fmt.Println("rendered ", rendered)
+	// Poll input events and process them
 	// Dispatch after render event
 	app.Dispatch(OnAfterRender, nil)
 
@@ -414,7 +421,8 @@ func (app *Application) Loop() error {
 func (app *Application) ClearUI() {
 	cc := math32.NewColor("gray")
 	app.gl.ClearColor(cc.R, cc.G, cc.B, 1)
-	app.gl.Clear(gls.DEPTH_BUFFER_BIT | gls.STENCIL_BUFFER_BIT | gls.COLOR_BUFFER_BIT)
+	// app.gl.ClearColor(0, 0, 0, 1)
+	app.gl.Clear(gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT | gl.COLOR_BUFFER_BIT)
 }
 
 func (app *Application) CreateCamera() {
@@ -432,24 +440,24 @@ func (app *Application) CreateCamera() {
 }
 
 func (app *Application) InitGls(glctx gl.Context) {
-	gl, err := gls.New(glctx)
+	gs, err := gls.New(glctx, app.log)
 	if err != nil {
 		app.log.Error("init gls error : %s ", err)
 		panic(err)
 	}
-	app.gl = gl
+	app.gl = gs
 	// Checks OpenGL errors
 	app.gl.SetCheckErrors(!*app.noglErrors)
 
-	// Logs OpenGL version
-	glVersion := app.Gl().GetString(gls.VERSION)
+	// // Logs OpenGL version
+	glVersion := app.Gl().GetString(gl.VERSION)
 	app.log.Info("OpenGL version: %s", glVersion)
 
-	// Clears the screen
+	// // Clears the screen
 	app.ClearUI()
 
 	// Creates camera
-	app.CreateCamera()
+	// app.CreateCamera()
 
 	// Creates orbit camera control
 	// It is important to do this after the root panel subscription
@@ -460,11 +468,12 @@ func (app *Application) InitGls(glctx gl.Context) {
 	// app.scene = core.NewNode()
 
 	// Creates renderer
-	// app.renderer = renderer.NewRenderer(gl)
-	// err = app.renderer.AddDefaultShaders()
-	// if err != nil {
-	// 	return nil, fmt.Errorf("Error from AddDefaulShaders:%v", err)
-	// }
-	// app.renderer.SetScene(app.scene)
+	app.renderer = renderer.NewRenderer(gs)
+	err = app.renderer.AddDefaultShaders()
+	if err != nil {
+		app.log.Error("Error from AddDefaulShaders:%v", err)
+		panic(err)
+	}
+	app.renderer.SetScene(app.scene)
 
 }

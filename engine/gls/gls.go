@@ -9,8 +9,10 @@ import (
 	"encoding/gob"
 	"fmt"
 	"math"
+	"runtime/debug"
 	"unsafe"
 
+	"github.com/wangzun/gogame/engine/util/logger"
 	"golang.org/x/mobile/gl"
 )
 
@@ -48,6 +50,7 @@ type GLS struct {
 	polygonOffsetUnits  float32           // cached last set polygon offset units
 	gobuf               []byte            // conversion buffer with GO memory
 	cbuf                []byte            // conversion buffer with C memory
+	log                 *logger.Logger
 }
 
 // Stats contains counters of OpenGL resources being used as well
@@ -88,13 +91,14 @@ const (
 // which encapsulates the state of an OpenGL context.
 // This should be called only after an active OpenGL context
 // is established, such as by creating a new window.
-func New(context gl.Context) (*GLS, error) {
+func New(context gl.Context, log *logger.Logger) (*GLS, error) {
 
 	gs := new(GLS)
 	gs.reset()
+	gs.log = log
 	gs.SetContext(context)
-	gs.setDefaultState()
 	gs.checkErrors = true
+	gs.setDefaultState()
 
 	// Preallocate conversion buffers
 	size := 1 * 1024
@@ -112,6 +116,18 @@ func (gs *GLS) SetCheckErrors(enable bool) {
 // CheckErrors returns if error checking is enabled or not.
 func (gs *GLS) CheckErrors() bool {
 	return gs.checkErrors
+}
+
+func (gs *GLS) DoCheck() {
+	if gs.checkErrors {
+		num := gs.context.GetError()
+		// gs.log.Error("now error num : %d ", num)
+		if num != 0 {
+			str := fmt.Sprintf("gs call error : %d \n %s", num, debug.Stack())
+			gs.log.Error(str)
+			// panic(str)
+		}
+	}
 }
 
 func (gs *GLS) SetContext(context gl.Context) {
@@ -150,24 +166,24 @@ func (gs *GLS) reset() {
 // for this context.
 func (gs *GLS) setDefaultState() {
 
-	gs.context.ClearColor(0, 0, 0, 1)
+	gs.ClearColor(0, 0, 0, 1)
 	gs.context.ClearDepthf(1)
 	gs.context.ClearStencil(0)
 
-	gs.Enable(DEPTH_TEST)
-	gs.DepthFunc(LEQUAL)
-	gs.FrontFace(CCW)
-	gs.CullFace(BACK)
-	gs.Enable(CULL_FACE)
-	gs.Enable(BLEND)
-	gs.BlendEquation(FUNC_ADD)
-	gs.BlendFunc(SRC_ALPHA, ONE_MINUS_SRC_ALPHA)
-	gs.Enable(VERTEX_PROGRAM_POINT_SIZE)
-	gs.Enable(PROGRAM_POINT_SIZE)
-	gs.Enable(MULTISAMPLE)
-	gs.Enable(POLYGON_OFFSET_FILL)
-	gs.Enable(POLYGON_OFFSET_LINE)
-	gs.Enable(POLYGON_OFFSET_POINT)
+	gs.Enable(gl.DEPTH_TEST)
+	gs.DepthFunc(gl.LEQUAL)
+	gs.FrontFace(gl.CCW)
+	gs.CullFace(gl.BACK)
+	gs.Enable(gl.CULL_FACE)
+	gs.Enable(gl.BLEND)
+	gs.BlendEquation(gl.FUNC_ADD)
+	gs.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+	// gs.Enable(gl.VERTEX_PROGRAM_POINT_SIZE)
+	// gs.Enable(gl.PROGRAM_POINT_SIZE)
+	// gs.Enable(gl.MULTISAMPLE)
+	gs.Enable(gl.POLYGON_OFFSET_FILL)
+	// gs.Enable(gl.POLYGON_OFFSET_LINE)
+	// gs.Enable(gl.POLYGON_OFFSET_POINT)
 }
 
 // Stats copy the current values of the internal statistics structure
@@ -187,6 +203,7 @@ func (gs *GLS) ActiveTexture(texture uint32) {
 		return
 	}
 	gs.context.ActiveTexture(gl.Enum(texture))
+	gs.DoCheck()
 	gs.activeTexture = texture
 }
 
@@ -197,8 +214,9 @@ func (gs *GLS) ActiveTexture(texture uint32) {
 // }
 
 func (gs *GLS) AttachShader(program gl.Program, shader gl.Shader) {
-
+	fmt.Println("attach shader")
 	gs.context.AttachShader(program, shader)
+	gs.DoCheck()
 }
 
 // BindBuffer binds a buffer object to the specified buffer binding point.
@@ -209,16 +227,19 @@ func (gs *GLS) AttachShader(program gl.Program, shader gl.Shader) {
 
 func (gs *GLS) BindBuffer(target gl.Enum, vbo gl.Buffer) {
 	gs.context.BindBuffer(target, vbo)
+	gs.DoCheck()
 }
 
 // BindTexture lets you create or use a named texture.
 func (gs *GLS) BindTexture(target gl.Enum, tex gl.Texture) {
 	gs.context.BindTexture(target, tex)
+	gs.DoCheck()
 }
 
 // BindVertexArray binds the vertex array object.
 func (gs *GLS) BindVertexArray(vao gl.VertexArray) {
 	gs.context.BindVertexArray(vao)
+	gs.DoCheck()
 }
 
 // BlendEquation sets the blend equations for all draw buffers.
@@ -228,6 +249,7 @@ func (gs *GLS) BlendEquation(mode uint32) {
 		return
 	}
 	gs.context.BlendEquation(gl.Enum(mode))
+	gs.DoCheck()
 	gs.blendEquation = mode
 }
 
@@ -239,6 +261,7 @@ func (gs *GLS) BlendEquationSeparate(modeRGB uint32, modeAlpha uint32) {
 		return
 	}
 	gs.context.BlendEquationSeparate(gl.Enum(modeRGB), gl.Enum(modeAlpha))
+	gs.DoCheck()
 	gs.blendEquationRGB = modeRGB
 	gs.blendEquationAlpha = modeAlpha
 }
@@ -251,6 +274,7 @@ func (gs *GLS) BlendFunc(sfactor, dfactor uint32) {
 		return
 	}
 	gs.context.BlendFunc(gl.Enum(sfactor), gl.Enum(dfactor))
+	gs.DoCheck()
 	gs.blendSrc = sfactor
 	gs.blendDst = dfactor
 }
@@ -268,6 +292,7 @@ func (gs *GLS) BlendFuncSeparate(srcRGB uint32, dstRGB uint32, srcAlpha uint32, 
 	gs.blendDstRGB = dstRGB
 	gs.blendSrcAlpha = srcAlpha
 	gs.blendDstAlpha = dstAlpha
+	gs.DoCheck()
 }
 
 // BufferData creates a new data store for the buffer object currently
@@ -280,19 +305,22 @@ func (gs *GLS) BlendFuncSeparate(srcRGB uint32, dstRGB uint32, srcAlpha uint32, 
 
 func (gs *GLS) BufferData(target uint32, size int, data []byte, usage uint32) {
 	gs.context.BufferData(gl.Enum(target), data, gl.Enum(usage))
+	gs.DoCheck()
 }
 
 // ClearColor specifies the red, green, blue, and alpha values
 // used by glClear to clear the color buffers.
 func (gs *GLS) ClearColor(r, g, b, a float32) {
 	gs.context.ClearColor(r, g, b, a)
+	gs.DoCheck()
 }
 
 // Clear sets the bitplane area of the window to values previously
 // selected by ClearColor, ClearDepth, and ClearStencil.
-func (gs *GLS) Clear(mask uint) {
+func (gs *GLS) Clear(mask gl.Enum) {
 
-	gs.context.Clear(gl.Enum(mask))
+	gs.context.Clear(mask)
+	gs.DoCheck()
 
 }
 
@@ -300,14 +328,19 @@ func (gs *GLS) Clear(mask uint) {
 // have been stored in the specified shader object.
 func (gs *GLS) CompileShader(shader gl.Shader) {
 
+	fmt.Println("compile shader")
 	gs.context.CompileShader(shader)
+	gs.DoCheck()
 }
 
 // CreateProgram creates an empty program object and returns
 // a non-zero value by which it can be referenced.
 func (gs *GLS) CreateProgram() gl.Program {
 
+	fmt.Println("create program")
+
 	p := gs.context.CreateProgram()
+	gs.DoCheck()
 
 	return p
 }
@@ -316,7 +349,9 @@ func (gs *GLS) CreateProgram() gl.Program {
 // a non-zero value by which it can be referenced.
 func (gs *GLS) CreateShader(stype uint32) gl.Shader {
 
+	fmt.Println("create shader")
 	h := gs.context.CreateShader(gl.Enum(stype))
+	gs.DoCheck()
 	return h
 }
 
@@ -327,6 +362,7 @@ func (gs *GLS) DeleteBuffers(bufs ...gl.Buffer) {
 	for _, buf := range bufs {
 		gs.context.DeleteBuffer(buf)
 	}
+	gs.DoCheck()
 	gs.stats.Buffers -= len(bufs)
 }
 
@@ -334,12 +370,14 @@ func (gs *GLS) DeleteBuffers(bufs ...gl.Buffer) {
 // associated with the specified shader object.
 func (gs *GLS) DeleteShader(shader gl.Shader) {
 	gs.context.DeleteShader(shader)
+	gs.DoCheck()
 }
 
 // DeleteProgram frees the memory and invalidates the name
 // associated with the specified program object.
 func (gs *GLS) DeleteProgram(program gl.Program) {
 	gs.context.DeleteProgram(program)
+	gs.DoCheck()
 
 }
 
@@ -349,6 +387,7 @@ func (gs *GLS) DeleteTextures(tex ...gl.Texture) {
 	for _, v := range tex {
 		gs.context.DeleteTexture(v)
 	}
+	gs.DoCheck()
 
 	gs.stats.Textures -= len(tex)
 }
@@ -359,6 +398,7 @@ func (gs *GLS) DeleteVertexArrays(vaos ...gl.VertexArray) {
 	for _, vao := range vaos {
 		gs.context.DeleteVertexArray(vao)
 	}
+	gs.DoCheck()
 	gs.stats.Vaos -= len(vaos)
 }
 
@@ -370,6 +410,7 @@ func (gs *GLS) DepthFunc(mode uint32) {
 		return
 	}
 	gs.context.DepthFunc(gl.Enum(mode))
+	gs.DoCheck()
 	gs.depthFunc = mode
 }
 
@@ -383,6 +424,7 @@ func (gs *GLS) DepthMask(flag bool) {
 		return
 	}
 	gs.context.DepthMask(flag)
+	gs.DoCheck()
 	if flag {
 		gs.depthMask = intTrue
 	} else {
@@ -393,7 +435,10 @@ func (gs *GLS) DepthMask(flag bool) {
 // DrawArrays renders primitives from array data.
 func (gs *GLS) DrawArrays(mode uint32, first int32, count int32) {
 
+	// fmt.Println(mode, first, count)
+
 	gs.context.DrawArrays(gl.Enum(mode), int(first), int(count))
+	gs.DoCheck()
 
 	gs.stats.Drawcalls++
 }
@@ -407,6 +452,7 @@ func (gs *GLS) DrawArrays(mode uint32, first int32, count int32) {
 // DrawElements renders primitives from array data.
 func (gs *GLS) DrawElements(mode uint32, count int32, itype uint32, start uint32) {
 	gs.context.DrawElements(gl.Enum(mode), int(count), gl.Enum(itype), int(start))
+	gs.DoCheck()
 
 	gs.stats.Drawcalls++
 }
@@ -419,6 +465,7 @@ func (gs *GLS) Enable(cap int) {
 		return
 	}
 	gs.context.Enable(gl.Enum(cap))
+	gs.DoCheck()
 	gs.capabilities[cap] = capEnabled
 }
 
@@ -430,6 +477,7 @@ func (gs *GLS) Disable(cap int) {
 		return
 	}
 	gs.context.Disable(gl.Enum(cap))
+	gs.DoCheck()
 	gs.capabilities[cap] = capDisabled
 }
 
@@ -437,6 +485,7 @@ func (gs *GLS) Disable(cap int) {
 func (gs *GLS) EnableVertexAttribArray(attr gl.Attrib) {
 
 	gs.context.EnableVertexAttribArray(attr)
+	gs.DoCheck()
 
 }
 
@@ -444,6 +493,7 @@ func (gs *GLS) EnableVertexAttribArray(attr gl.Attrib) {
 func (gs *GLS) CullFace(mode uint32) {
 
 	gs.context.CullFace(gl.Enum(mode))
+	gs.DoCheck()
 
 }
 
@@ -454,6 +504,7 @@ func (gs *GLS) FrontFace(mode uint32) {
 		return
 	}
 	gs.context.FrontFace(gl.Enum(mode))
+	gs.DoCheck()
 	gs.frontFace = mode
 }
 
@@ -461,6 +512,7 @@ func (gs *GLS) FrontFace(mode uint32) {
 func (gs *GLS) GenBuffer() gl.Buffer {
 
 	buf := gs.context.CreateBuffer()
+	gs.DoCheck()
 	gs.stats.Buffers++
 	return buf
 }
@@ -468,6 +520,7 @@ func (gs *GLS) GenBuffer() gl.Buffer {
 // GenerateMipmap generates mipmaps for the specified texture target.
 func (gs *GLS) GenerateMipmap(target uint32) {
 	gs.context.GenerateMipmap(gl.Enum(target))
+	gs.DoCheck()
 
 }
 
@@ -475,6 +528,7 @@ func (gs *GLS) GenerateMipmap(target uint32) {
 func (gs *GLS) GenTexture() gl.Texture {
 
 	tex := gs.context.CreateTexture()
+	gs.DoCheck()
 
 	gs.stats.Textures++
 	return tex
@@ -484,6 +538,7 @@ func (gs *GLS) GenTexture() gl.Texture {
 func (gs *GLS) GenVertexArray() gl.VertexArray {
 
 	vao := gs.context.CreateVertexArray()
+	gs.DoCheck()
 
 	gs.stats.Vaos++
 	return vao
@@ -493,6 +548,7 @@ func (gs *GLS) GenVertexArray() gl.VertexArray {
 func (gs *GLS) GetAttribLocation(program gl.Program, name string) gl.Attrib {
 
 	loc := gs.context.GetAttribLocation(program, name)
+	gs.DoCheck()
 	return loc
 }
 
@@ -500,6 +556,7 @@ func (gs *GLS) GetAttribLocation(program gl.Program, name string) gl.Attrib {
 func (gs *GLS) GetProgramiv(program gl.Program, pname uint32, params *int32) {
 
 	p := gs.context.GetProgrami(program, gl.Enum(pname))
+	gs.DoCheck()
 
 	*params = int32(p)
 
@@ -509,9 +566,11 @@ func (gs *GLS) GetProgramiv(program gl.Program, pname uint32, params *int32) {
 // GetProgramInfoLog returns the information log for the specified program object.
 func (gs *GLS) GetProgramInfoLog(program gl.Program) string {
 
-	return gs.context.GetProgramInfoLog(program)
+	str := gs.context.GetProgramInfoLog(program)
+	gs.DoCheck()
 	// C.glGetProgramInfoLog(C.GLuint(program), C.GLsizei(length), nil, gs.gobufSize(uint32(length)))
 	// return string(gs.gobuf[:length])
+	return str
 }
 
 // GetShaderInfoLog returns the information log for the specified shader object.
@@ -519,20 +578,25 @@ func (gs *GLS) GetShaderInfoLog(shader gl.Shader) string {
 
 	var length int32
 	gs.GetShaderiv(shader, INFO_LOG_LENGTH, &length)
+	gs.DoCheck()
 	if length == 0 {
 		return ""
 	}
 
-	return gs.context.GetShaderInfoLog(shader)
+	str := gs.context.GetShaderInfoLog(shader)
+	gs.DoCheck()
+	return str
 
 	// C.glGetShaderInfoLog(C.GLuint(shader), C.GLsizei(length), nil, gs.gobufSize(uint32(length)))
 	// return string(gs.gobuf[:length])
 }
 
 // GetString returns a string describing the specified aspect of the current GL connection.
-func (gs *GLS) GetString(name uint32) string {
+func (gs *GLS) GetString(name gl.Enum) string {
 
-	return gs.context.GetString(gl.Enum(name))
+	str := gs.context.GetString(name)
+	gs.DoCheck()
+	return str
 
 	// cs := C.glGetString(C.GLenum(name))
 	// return C.GoString((*C.char)(unsafe.Pointer(cs)))
@@ -542,6 +606,7 @@ func (gs *GLS) GetString(name uint32) string {
 func (gs *GLS) GetUniformLocation(program gl.Program, name string) gl.Uniform {
 
 	loc := gs.context.GetUniformLocation(program, name)
+	gs.DoCheck()
 
 	return loc
 }
@@ -560,6 +625,7 @@ func (gs *GLS) LineWidth(width float32) {
 	}
 
 	gs.context.LineWidth(width)
+	gs.DoCheck()
 	gs.lineWidth = width
 }
 
@@ -567,6 +633,7 @@ func (gs *GLS) LineWidth(width float32) {
 func (gs *GLS) LinkProgram(program gl.Program) {
 
 	gs.context.LinkProgram(program)
+	gs.DoCheck()
 
 }
 
@@ -574,6 +641,7 @@ func (gs *GLS) LinkProgram(program gl.Program) {
 func (gs *GLS) GetShaderiv(shader gl.Shader, pname uint32, params *int32) {
 
 	p := gs.context.GetShaderi(shader, gl.Enum(pname))
+	gs.DoCheck()
 
 	*params = int32(p)
 }
@@ -582,6 +650,7 @@ func (gs *GLS) GetShaderiv(shader gl.Shader, pname uint32, params *int32) {
 func (gs *GLS) Scissor(x, y int32, width, height uint32) {
 
 	gs.context.Scissor(x, y, int32(width), int32(height))
+	gs.DoCheck()
 
 }
 
@@ -589,6 +658,7 @@ func (gs *GLS) Scissor(x, y int32, width, height uint32) {
 func (gs *GLS) ShaderSource(shader gl.Shader, src string) {
 
 	gs.context.ShaderSource(shader, src)
+	gs.DoCheck()
 }
 
 // TexImage2D specifies a two-dimensional texture image.
@@ -600,6 +670,7 @@ func (gs *GLS) TexImage2D(target uint32, level int32, iformat int32, width int32
 
 	data, _ := GetBytes(tex)
 	gs.context.TexImage2D(gl.Enum(target), int(level), int(iformat), int(width), int(height), gl.Enum(format), gl.Enum(itype), data)
+	gs.DoCheck()
 
 }
 
@@ -613,6 +684,7 @@ func (gs *GLS) TexImage2D(target uint32, level int32, iformat int32, width int32
 func (gs *GLS) TexParameteri(target uint32, pname uint32, param int32) {
 
 	gs.context.TexParameteri(gl.Enum(target), gl.Enum(pname), int(param))
+	gs.DoCheck()
 
 }
 
@@ -635,6 +707,7 @@ func (gs *GLS) PolygonOffset(factor float32, units float32) {
 		return
 	}
 	gs.context.PolygonOffset(factor, units)
+	gs.DoCheck()
 	gs.polygonOffsetFactor = factor
 	gs.polygonOffsetUnits = units
 }
@@ -643,6 +716,7 @@ func (gs *GLS) PolygonOffset(factor float32, units float32) {
 func (gs *GLS) Uniform1i(location gl.Uniform, v0 int32) {
 
 	gs.context.Uniform1i(location, int(v0))
+	gs.DoCheck()
 
 	gs.stats.Unisets++
 }
@@ -651,6 +725,7 @@ func (gs *GLS) Uniform1i(location gl.Uniform, v0 int32) {
 func (gs *GLS) Uniform1f(location gl.Uniform, v0 float32) {
 
 	gs.context.Uniform1f(location, v0)
+	gs.DoCheck()
 
 	gs.stats.Unisets++
 }
@@ -659,6 +734,7 @@ func (gs *GLS) Uniform1f(location gl.Uniform, v0 float32) {
 func (gs *GLS) Uniform2f(location gl.Uniform, v0, v1 float32) {
 
 	gs.context.Uniform2f(location, v0, v1)
+	gs.DoCheck()
 
 	gs.stats.Unisets++
 }
@@ -667,6 +743,7 @@ func (gs *GLS) Uniform2f(location gl.Uniform, v0, v1 float32) {
 func (gs *GLS) Uniform3f(location gl.Uniform, v0, v1, v2 float32) {
 
 	gs.context.Uniform3f(location, v0, v1, v2)
+	gs.DoCheck()
 
 	gs.stats.Unisets++
 }
@@ -675,6 +752,7 @@ func (gs *GLS) Uniform3f(location gl.Uniform, v0, v1, v2 float32) {
 func (gs *GLS) Uniform4f(location gl.Uniform, v0, v1, v2, v3 float32) {
 
 	gs.context.Uniform4f(location, v0, v1, v2, v3)
+	gs.DoCheck()
 
 	gs.stats.Unisets++
 }
@@ -683,6 +761,7 @@ func (gs *GLS) Uniform4f(location gl.Uniform, v0, v1, v2, v3 float32) {
 func (gs *GLS) UniformMatrix3fv(location gl.Uniform, count int32, transpose bool, pm []float32) {
 
 	gs.context.UniformMatrix3fv(location, pm)
+	gs.DoCheck()
 
 	gs.stats.Unisets++
 }
@@ -691,6 +770,7 @@ func (gs *GLS) UniformMatrix3fv(location gl.Uniform, count int32, transpose bool
 func (gs *GLS) UniformMatrix4fv(location gl.Uniform, count int32, transpose bool, pm []float32) {
 
 	gs.context.UniformMatrix4fv(location, pm)
+	gs.DoCheck()
 
 	gs.stats.Unisets++
 }
@@ -698,6 +778,7 @@ func (gs *GLS) UniformMatrix4fv(location gl.Uniform, count int32, transpose bool
 // Uniform1fv sets the value of one or many float uniform variables for the current program object.
 func (gs *GLS) Uniform1fv(location gl.Uniform, count int32, v []float32) {
 	gs.context.Uniform1fv(location, v)
+	gs.DoCheck()
 
 	gs.stats.Unisets++
 }
@@ -706,6 +787,7 @@ func (gs *GLS) Uniform1fv(location gl.Uniform, count int32, v []float32) {
 func (gs *GLS) Uniform2fv(location gl.Uniform, src []float32) {
 
 	gs.context.Uniform2fv(location, src)
+	gs.DoCheck()
 
 	fmt.Println("Uniform2fv")
 
@@ -724,8 +806,10 @@ func (gs *GLS) Uniform2fv(location gl.Uniform, src []float32) {
 func (gs *GLS) Uniform3fv(location gl.Uniform, src []float32) {
 
 	gs.context.Uniform3fv(location, src)
+	gs.DoCheck()
+	// fmt.Println(src)
 
-	fmt.Println("Uniform3fv")
+	// fmt.Println("Uniform3fv")
 
 	gs.stats.Unisets++
 }
@@ -740,6 +824,7 @@ func (gs *GLS) Uniform3fv(location gl.Uniform, src []float32) {
 func (gs *GLS) Uniform4fv(location gl.Uniform, v []float32) {
 
 	gs.context.Uniform4fv(location, v)
+	gs.DoCheck()
 
 	fmt.Println("Uniform4fv")
 	gs.stats.Unisets++
@@ -756,6 +841,7 @@ func (gs *GLS) VertexAttribPointer(index gl.Attrib, size int32, xtype uint32, no
 
 	// dst Attrib, size int, ty Enum, normalized bool, stride, offset int
 	gs.context.VertexAttribPointer(index, int(size), gl.Enum(xtype), normalized, int(stride), int(offset))
+	gs.DoCheck()
 
 	// C.glVertexAttribPointer(C.GLuint(index), C.GLint(size), C.GLenum(xtype), bool2c(normalized), C.GLsizei(stride), unsafe.Pointer(uintptr(offset)))
 }
@@ -764,6 +850,7 @@ func (gs *GLS) VertexAttribPointer(index gl.Attrib, size int32, xtype uint32, no
 func (gs *GLS) Viewport(x, y, width, height int32) {
 
 	gs.context.Viewport(int(x), int(y), int(width), int(height))
+	gs.DoCheck()
 
 	gs.viewportX = x
 	gs.viewportY = y
@@ -781,6 +868,7 @@ func (gs *GLS) UseProgram(prog *Program) {
 	//----- Todo
 
 	gs.context.UseProgram(prog.handle)
+	gs.DoCheck()
 	gs.prog = prog
 
 	// Inserts program in cache if not already there.

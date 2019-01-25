@@ -294,24 +294,26 @@ func (grmat *GraphicMaterial) Render(gs *gls.GLS, rinfo *core.RenderInfo) {
 	grmat.imat.RenderSetup(gs)
 
 	// Setup the associated geometry (set VAO and transfer VBOS)
+	//  --- TODO BUG IN MOBILE
 	gr := grmat.igraphic.GetGraphic()
 	gr.igeom.RenderSetup(gs)
 
-	// Setup current graphic (transfer matrices)
+	// // Setup current graphic (transfer matrices)
 	grmat.igraphic.RenderSetup(gs, rinfo)
 
-	// Get the number of vertices for the current material
+	// // Get the number of vertices for the current material
 	count := grmat.count
 
 	geom := gr.igeom.GetGeometry()
 	indices := geom.Indices()
+	// fmt.Println(indices.Size(), gr.mode)
 	// Indexed geometry
 	if indices.Size() > 0 {
 		if count == 0 {
 			count = indices.Size()
 		}
 		gs.DrawElements(gr.mode, int32(count), gls.UNSIGNED_INT, 4*uint32(grmat.start))
-		// Non indexed geometry
+		// 	// Non indexed geometry
 	} else {
 		if count == 0 {
 			count = geom.Items()

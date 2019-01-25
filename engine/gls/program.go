@@ -137,7 +137,6 @@ func (prog *Program) Build() error {
 // GetAttribLocation returns the location of the specified attribute
 // in this program. This location is internally cached.
 func (prog *Program) GetAttribLocation(name string) gl.Attrib {
-
 	return prog.gs.GetAttribLocation(prog.handle, name)
 }
 

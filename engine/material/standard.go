@@ -133,6 +133,7 @@ func (ms *Standard) RenderSetup(gs *gls.GLS) {
 		ms.udata.protationZ,
 		0,
 		0}
+
 	gs.Uniform3fv(gl.Uniform{Value: location}, data)
 	// gs.Uniform3fvUP(location, standardVec3Count, unsafe.Pointer(&ms.udata))
 }
