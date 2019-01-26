@@ -35,7 +35,7 @@ type Texture2D struct {
 	updateData   bool        // texture data needs to be sent
 	updateParams bool        // texture parameters needs to be sent
 	genMipmap    bool        // generate mipmaps flag
-	data         interface{} // array with texture data
+	data         []uint8     // array with texture data
 	uniUnit      gls.Uniform // Texture unit uniform location cache
 	uniInfo      gls.Uniform // Texture info uniform location cache
 	udata        struct {    // Combined uniform data in 3 vec2:
@@ -97,7 +97,7 @@ func NewTexture2DFromRGBA(rgba *image.RGBA) *Texture2D {
 }
 
 // NewTexture2DFromData creates a new texture from data
-func NewTexture2DFromData(width, height int, format int, formatType, iformat int, data interface{}) *Texture2D {
+func NewTexture2DFromData(width, height int, format int, formatType, iformat int, data []uint8) *Texture2D {
 
 	t := newTexture2D()
 	t.SetData(width, height, format, formatType, iformat, data)
@@ -157,6 +157,8 @@ func (t *Texture2D) SetImage(imgfile string) error {
 // SetFromRGBA sets the texture data from the specified image.RGBA object
 func (t *Texture2D) SetFromRGBA(rgba *image.RGBA) {
 
+	fmt.Println("old : ", rgba.Pix[125:135])
+
 	t.SetData(
 		rgba.Rect.Size().X,
 		rgba.Rect.Size().Y,
@@ -168,7 +170,7 @@ func (t *Texture2D) SetFromRGBA(rgba *image.RGBA) {
 }
 
 // SetData sets the texture data
-func (t *Texture2D) SetData(width, height int, format int, formatType, iformat int, data interface{}) {
+func (t *Texture2D) SetData(width, height int, format int, formatType, iformat int, data []uint8) {
 
 	t.width = int32(width)
 	t.height = int32(height)
@@ -315,6 +317,7 @@ func (t *Texture2D) RenderSetup(gs *gls.GLS, slotIdx, uniIdx int) { // Could hav
 	}
 
 	// Sets the texture unit for this texture
+	fmt.Println(t.texname, slotIdx, uniIdx)
 	gs.ActiveTexture(uint32(gls.TEXTURE0 + slotIdx))
 	gs.BindTexture(gls.TEXTURE_2D, t.texname)
 
@@ -349,6 +352,8 @@ func (t *Texture2D) RenderSetup(gs *gls.GLS, slotIdx, uniIdx int) { // Could hav
 	}
 
 	// Transfer texture unit uniform
+
+	fmt.Println(t.uniUnit)
 	var location int32
 	if uniIdx == 0 {
 		location = t.uniUnit.Location(gs)
@@ -361,6 +366,11 @@ func (t *Texture2D) RenderSetup(gs *gls.GLS, slotIdx, uniIdx int) { // Could hav
 	const vec2count = 3
 	location = t.uniInfo.LocationIdx(gs, vec2count*int32(uniIdx))
 	// gs.Uniform2fvUP(location, vec2count, unsafe.Pointer(&t.udata))
+	// fmt.Println(location, t.uniInfo)
+
+	if location < 0 {
+		return
+	}
 
 	udata := []float32{t.udata.offsetX,
 		t.udata.offsetY,

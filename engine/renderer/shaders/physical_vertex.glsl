@@ -2,6 +2,12 @@
 // Physically Based Shading of a microfacet surface material - Vertex Shader
 // Modified from reference implementation at https://github.com/KhronosGroup/glTF-WebGL-PBR
 //
+
+#ifdef GL_ES
+precision highp float;
+#endif
+
+
 #include <attributes>
 
 // Model uniforms
@@ -13,10 +19,17 @@ uniform mat4 MVP;
 #include <bones_vertex_declaration>
 
 // Output variables for Fragment shader
-out vec3 Position;
-out vec3 Normal;
-out vec3 CamDir;
-out vec2 FragTexcoord;
+// out vec3 Position;
+// out vec3 Normal;
+// out vec3 CamDir;
+// out vec2 FragTexcoord;
+
+varying vec3 Position;
+varying vec3 Normal;
+varying vec3 CamDir;
+varying vec2 FragTexcoord;
+
+
 
 void main() {
 
@@ -45,6 +58,8 @@ void main() {
     #include <bones_vertex>
 
     gl_Position = MVP * finalWorld * vec4(vPosition, 1.0);
+    // gl_Position = MVP * vec4(vPosition, 1.0);
+    // gl_Position = vec4(vPosition, 1.0);
 
 }
 

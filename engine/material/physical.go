@@ -185,6 +185,7 @@ func (m *Physical) RenderSetup(gs *gls.GLS) {
 		m.udata.roughnessFactor,
 		0,
 		0}
+	// fmt.Println("fffffffffffff : ", m)
 	gs.Uniform4fv(gl.Uniform{Value: location}, data)
 	// gl.Uniform4fvUP(location, physicalVec4Count, unsafe.Pointer(&m.udata))
 }

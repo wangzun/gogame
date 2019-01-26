@@ -666,10 +666,11 @@ func (gs *GLS) ShaderSource(shader gl.Shader, src string) {
 // "encoding/gob"
 // "bytes"
 
-func (gs *GLS) TexImage2D(target uint32, level int32, iformat int32, width int32, height int32, border int32, format uint32, itype uint32, tex interface{}) {
+func (gs *GLS) TexImage2D(target uint32, level int32, iformat int32, width int32, height int32, border int32, format uint32, itype uint32, tex []uint8) {
 
-	data, _ := GetBytes(tex)
-	gs.context.TexImage2D(gl.Enum(target), int(level), int(iformat), int(width), int(height), gl.Enum(format), gl.Enum(itype), data)
+	// data, _ := GetBytes(tex)
+	fmt.Println("new : ", tex[125:135])
+	gs.context.TexImage2D(gl.Enum(target), int(level), int(iformat), int(width), int(height), gl.Enum(format), gl.Enum(itype), tex)
 	gs.DoCheck()
 
 }
@@ -789,7 +790,7 @@ func (gs *GLS) Uniform2fv(location gl.Uniform, src []float32) {
 	gs.context.Uniform2fv(location, src)
 	gs.DoCheck()
 
-	fmt.Println("Uniform2fv")
+	// fmt.Println("Uniform2fv")
 
 	gs.stats.Unisets++
 }
@@ -826,7 +827,7 @@ func (gs *GLS) Uniform4fv(location gl.Uniform, v []float32) {
 	gs.context.Uniform4fv(location, v)
 	gs.DoCheck()
 
-	fmt.Println("Uniform4fv")
+	// fmt.Println("Uniform4fv")
 	gs.stats.Unisets++
 }
 

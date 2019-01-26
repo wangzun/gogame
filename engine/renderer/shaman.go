@@ -205,7 +205,7 @@ func (sm *Shaman) GenProgram(specs *ShaderSpecs) (*gls.Program, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("vertexSource:%s\n", vertexSource)
+	// fmt.Printf("vertexSource:%s\n", vertexSource)
 
 	// Get fragment shader source
 	fragSource, ok := sm.shadersm[progInfo.Fragment]
@@ -217,7 +217,7 @@ func (sm *Shaman) GenProgram(specs *ShaderSpecs) (*gls.Program, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("fragSource:%s\n", fragSource)
+	// fmt.Printf("fragSource:%s\n", fragSource)
 
 	// Checks for optional geometry shader compiled template
 	var geomSource = ""

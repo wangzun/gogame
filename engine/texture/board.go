@@ -5,8 +5,11 @@
 package texture
 
 import (
+	"encoding/binary"
+
 	"github.com/wangzun/gogame/engine/gls"
 	"github.com/wangzun/gogame/engine/math32"
+	"golang.org/x/mobile/exp/f32"
 )
 
 // NewBoard creates and returns a pointer to a new checker board 2D texture.
@@ -45,5 +48,5 @@ func NewBoard(width, height int, c1, c2, c3, c4 *math32.Color, alpha float32) *T
 	colorData(width, height, c4)
 
 	// Creates, initializes and returns board texture object
-	return NewTexture2DFromData(width*2, height*2, gls.RGBA, gls.FLOAT, gls.RGBA8, data)
+	return NewTexture2DFromData(width*2, height*2, gls.RGBA, gls.FLOAT, gls.RGBA8, f32.Bytes(binary.LittleEndian, data...))
 }

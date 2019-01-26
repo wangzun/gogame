@@ -5,6 +5,7 @@
 package graphic
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/wangzun/gogame/engine/core"
@@ -40,6 +41,7 @@ func NewRiggedMesh(mesh *Mesh) *RiggedMesh {
 func (rm *RiggedMesh) SetSkeleton(sk *Skeleton) {
 
 	rm.skeleton = sk
+	fmt.Printf("bones : %d", len(rm.skeleton.Bones()))
 	rm.ShaderDefines.Set("TOTAL_BONES", strconv.Itoa(len(rm.skeleton.Bones())))
 }
 
@@ -75,5 +77,6 @@ func (rm *RiggedMesh) RenderSetup(gs *gls.GLS, rinfo *core.RenderInfo) {
 			data = append(data, v1)
 		}
 	}
+	// fmt.Println(len(data))
 	gs.UniformMatrix4fv(gl.Uniform{Value: location}, int32(len(boneMatrices)), false, data)
 }

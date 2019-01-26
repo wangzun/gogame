@@ -6,6 +6,7 @@ package gls
 
 import (
 	"encoding/binary"
+	"fmt"
 
 	"github.com/wangzun/gogame/engine/math32"
 
@@ -310,8 +311,9 @@ func (vbo *VBO) Transfer(gs *GLS) {
 			loc := gs.prog.GetAttribLocation(attrib.Name)
 			// fmt.Println(loc, attrib.Name)
 			// fmt.Println(vbo.buffer)
-			if loc.Value < 0 {
-				log.Warn("Attribute not found: %v", attrib.Name)
+			fmt.Println(int(loc.Value), attrib)
+			if int(loc.Value) < 0 {
+				fmt.Println("Attribute not found : ", attrib.Name)
 				continue
 			}
 			// Enables attribute and sets its stride and offset in the buffer
