@@ -12,6 +12,22 @@
 		<data>
 		n57qDP4tZfLD1rCS43W0B4LQjzE=
 		</data>
+		<key>assets/gopher/README.md</key>
+		<data>
+		m7wO3rGY5vRHTl03dptG/AwfoNs=
+		</data>
+		<key>assets/gopher/gopher.blend</key>
+		<data>
+		aAr1OonxiWGnJRylWxFTQ70AlIA=
+		</data>
+		<key>assets/gopher/gopher.mtl</key>
+		<data>
+		6JqxLT3cZz+WHUD8Qp5Wayjqh6U=
+		</data>
+		<key>assets/gopher/gopher.obj</key>
+		<data>
+		uW7p3m5C5OWNtDKDDvkfzPD1zIc=
+		</data>
 		<key>assets/griffin/scene.bin</key>
 		<data>
 		LbN+YEFLbVFwppxnFcQWPjlwX1Q=
@@ -31,6 +47,50 @@
 	</dict>
 	<key>files2</key>
 	<dict>
+		<key>assets/gopher/README.md</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			m7wO3rGY5vRHTl03dptG/AwfoNs=
+			</data>
+			<key>hash2</key>
+			<data>
+			sd7QSNCqfSdlRxO8TqyeOuG8JrEu+KqMylNyqmhuh1k=
+			</data>
+		</dict>
+		<key>assets/gopher/gopher.blend</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			aAr1OonxiWGnJRylWxFTQ70AlIA=
+			</data>
+			<key>hash2</key>
+			<data>
+			UCNkXV6p5+1h+qIihsz6P1qSeHGCGxy3dU+L7uubx+g=
+			</data>
+		</dict>
+		<key>assets/gopher/gopher.mtl</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			6JqxLT3cZz+WHUD8Qp5Wayjqh6U=
+			</data>
+			<key>hash2</key>
+			<data>
+			XgHMdPCdVqIOlwT0PJwYiIVLM9cTUFF25zIaHMfAgzE=
+			</data>
+		</dict>
+		<key>assets/gopher/gopher.obj</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			uW7p3m5C5OWNtDKDDvkfzPD1zIc=
+			</data>
+			<key>hash2</key>
+			<data>
+			HKrNXGmZvNqzEZlr6ybjzFoDBGKKVuzeco4bEF5G1FQ=
+			</data>
+		</dict>
 		<key>assets/griffin/scene.bin</key>
 		<dict>
 			<key>hash</key>

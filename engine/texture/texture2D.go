@@ -157,8 +157,6 @@ func (t *Texture2D) SetImage(imgfile string) error {
 // SetFromRGBA sets the texture data from the specified image.RGBA object
 func (t *Texture2D) SetFromRGBA(rgba *image.RGBA) {
 
-	fmt.Println("old : ", rgba.Pix[125:135])
-
 	t.SetData(
 		rgba.Rect.Size().X,
 		rgba.Rect.Size().Y,
@@ -317,7 +315,7 @@ func (t *Texture2D) RenderSetup(gs *gls.GLS, slotIdx, uniIdx int) { // Could hav
 	}
 
 	// Sets the texture unit for this texture
-	fmt.Println(t.texname, slotIdx, uniIdx)
+	// fmt.Println(t.texname, slotIdx, uniIdx)
 	gs.ActiveTexture(uint32(gls.TEXTURE0 + slotIdx))
 	gs.BindTexture(gls.TEXTURE_2D, t.texname)
 
@@ -353,7 +351,7 @@ func (t *Texture2D) RenderSetup(gs *gls.GLS, slotIdx, uniIdx int) { // Could hav
 
 	// Transfer texture unit uniform
 
-	fmt.Println(t.uniUnit)
+	// fmt.Println(t.uniUnit)
 	var location int32
 	if uniIdx == 0 {
 		location = t.uniUnit.Location(gs)

@@ -6,6 +6,8 @@ package logger
 
 import (
 	"fmt"
+	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -201,36 +203,19 @@ func (l *Logger) Log(level int, format string, v ...interface{}) {
 	if !l.enabled || level < l.level {
 		return
 	}
-
-	// Formats date
-	now := time.Now().UTC()
-	year, month, day := now.Date()
-	hour, min, sec := now.Clock()
-	fdate := []string{}
-
-	if l.format&FDATE != 0 {
-		fdate = append(fdate, fmt.Sprintf("%04d/%02d/%02d", year, month, day))
-	}
-	if l.format&FTIME != 0 {
-		if len(fdate) > 0 {
-			fdate = append(fdate, "-")
-		}
-		fdate = append(fdate, fmt.Sprintf("%02d:%02d:%02d", hour, min, sec))
-		var sdecs string
-		if l.format&FMILIS != 0 {
-			sdecs = fmt.Sprintf(".%.03d", now.Nanosecond()/1000000)
-		} else if l.format&FMICROS != 0 {
-			sdecs = fmt.Sprintf(".%.06d", now.Nanosecond()/1000)
-		} else if l.format&FNANOS != 0 {
-			sdecs = fmt.Sprintf(".%.09d", now.Nanosecond())
-		}
-		fdate = append(fdate, sdecs)
-	}
-
+	now := time.Now()
+	timeStr := now.Format("2006-01-02 15:04:05")
 	// Formats message
 	usermsg := fmt.Sprintf(format, v...)
 	prefix := l.prefix
-	msg := fmt.Sprintf("%s:%s:%s:%s\n", strings.Join(fdate, ""), levelNames[level][:1], prefix, usermsg)
+
+	filename, line := "???", 0
+	_, filename, line, ok := runtime.Caller(2)
+	if ok {
+		filename = filepath.Base(filename) // /full/path/basename.go => basename.go
+	}
+
+	msg := fmt.Sprintf("%s:%s:%s:%s:%d:%s\n", timeStr, levelNames[level][:1], prefix, filename, line, usermsg)
 
 	// Log event
 	var event = Event{

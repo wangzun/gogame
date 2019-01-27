@@ -188,20 +188,20 @@ func (g *GLTF) LoadNode(nodeIdx int) (core.INode, error) {
 		log.Debug("Fetching Node %d (cached)", nodeIdx)
 		return nodeData.cache, nil
 	}
-	fmt.Printf("Loading Node %d", nodeIdx)
+	// fmt.Printf("Loading Node %d", nodeIdx)
 
 	var in core.INode
 	var err error
 	// Check if the node is a Mesh (triangles, lines, etc...)
 	if nodeData.Mesh != nil {
-		fmt.Println("ppppppppppppp")
+		// fmt.Println("ppppppppppppp")
 		in, err = g.LoadMesh(*nodeData.Mesh)
 		if err != nil {
 			return nil, err
 		}
 
 		if nodeData.Skin != nil {
-			fmt.Println("0000000000000")
+			// fmt.Println("0000000000000")
 			children := in.GetNode().Children()
 			if len(children) > 1 {
 				//log.Error("skinning/rigging meshes with more than a single primitive is not supported")
@@ -214,7 +214,7 @@ func (g *GLTF) LoadNode(nodeIdx int) (core.INode, error) {
 			if err != nil {
 				return nil, err
 			}
-			fmt.Println("skkkkkkkkk")
+			// fmt.Println("skkkkkkkkk")
 			rm.SetSkeleton(skeleton)
 			in = rm
 		}
@@ -851,6 +851,9 @@ func (g *GLTF) LoadImage(imgIdx int) (*image.RGBA, error) {
 // bytesToArrayU32 converts a byte array to ArrayU32.
 func (g *GLTF) bytesToArrayU32(data []byte, componentType, count int) (math32.ArrayU32, error) {
 
+	if count > (1 << 16) {
+		return nil, fmt.Errorf("count too large :%v", count)
+	}
 	// If component is UNSIGNED_INT nothing to do
 	if componentType == UNSIGNED_INT {
 		// arr := (*[1 << 30]uint32)(unsafe.Pointer(&data[0]))[:count]

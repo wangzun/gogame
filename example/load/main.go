@@ -5,6 +5,7 @@ import (
 	"github.com/wangzun/gogame/engine/graphic"
 	"github.com/wangzun/gogame/engine/light"
 	"github.com/wangzun/gogame/engine/loader/gltf"
+	"github.com/wangzun/gogame/engine/loader/obj"
 	"github.com/wangzun/gogame/engine/math32"
 	"github.com/wangzun/gogame/engine/util/application"
 )
@@ -35,9 +36,25 @@ func main() {
 		app.Log().Error("load scene ", err)
 	}
 
-	node.GetNode().SetPosition(0, 0, -2)
+	node.GetNode().SetPosition(0.5, 0, -2)
+	node.GetNode().SetScale(0.5, 0.5, 0.5)
 
 	app.Scene().Add(node)
+
+	dec, err := obj.Decode("assets/gopher/gopher.obj", "assets/gopher/gopher.mtl")
+	if err != nil {
+		panic(err.Error())
+	}
+
+	// Creates a new node with all the objects in the decoded file and adds it to the scene
+	group, err := dec.NewGroup()
+	if err != nil {
+		panic(err.Error())
+	}
+	group.GetNode().SetRotationY(-0.5 * 3.14)
+	group.GetNode().SetPosition(-0.5, 0, -1)
+	group.GetNode().SetScale(0.3, 0.3, 0.3)
+	app.Scene().Add(group)
 
 	for i := range gltfjson.Animations {
 		anim, _ := gltfjson.LoadAnimation(i)

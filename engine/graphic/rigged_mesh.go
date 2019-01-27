@@ -5,7 +5,6 @@
 package graphic
 
 import (
-	"fmt"
 	"strconv"
 
 	"github.com/wangzun/gogame/engine/core"
@@ -41,7 +40,7 @@ func NewRiggedMesh(mesh *Mesh) *RiggedMesh {
 func (rm *RiggedMesh) SetSkeleton(sk *Skeleton) {
 
 	rm.skeleton = sk
-	fmt.Printf("bones : %d", len(rm.skeleton.Bones()))
+	// fmt.Printf("bones : %d", len(rm.skeleton.Bones()))
 	rm.ShaderDefines.Set("TOTAL_BONES", strconv.Itoa(len(rm.skeleton.Bones())))
 }
 

@@ -180,7 +180,7 @@ func (gs *GLS) setDefaultState() {
 	gs.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
 	// gs.Enable(gl.VERTEX_PROGRAM_POINT_SIZE)
 	// gs.Enable(gl.PROGRAM_POINT_SIZE)
-	// gs.Enable(gl.MULTISAMPLE)
+	gs.Enable(MULTISAMPLE)
 	gs.Enable(gl.POLYGON_OFFSET_FILL)
 	// gs.Enable(gl.POLYGON_OFFSET_LINE)
 	// gs.Enable(gl.POLYGON_OFFSET_POINT)
@@ -669,7 +669,6 @@ func (gs *GLS) ShaderSource(shader gl.Shader, src string) {
 func (gs *GLS) TexImage2D(target uint32, level int32, iformat int32, width int32, height int32, border int32, format uint32, itype uint32, tex []uint8) {
 
 	// data, _ := GetBytes(tex)
-	fmt.Println("new : ", tex[125:135])
 	gs.context.TexImage2D(gl.Enum(target), int(level), int(iformat), int(width), int(height), gl.Enum(format), gl.Enum(itype), tex)
 	gs.DoCheck()
 

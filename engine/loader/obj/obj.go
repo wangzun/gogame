@@ -10,7 +10,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"math"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -74,7 +73,7 @@ type Material struct {
 // Local constants
 const (
 	blanks   = "\r\n\t "
-	invINDEX = math.MaxUint32
+	invINDEX = 2147483647
 	objType  = "obj"
 	mtlType  = "mtl"
 )
