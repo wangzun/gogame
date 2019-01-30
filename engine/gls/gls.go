@@ -180,7 +180,7 @@ func (gs *GLS) setDefaultState() {
 	gs.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
 	// gs.Enable(gl.VERTEX_PROGRAM_POINT_SIZE)
 	// gs.Enable(gl.PROGRAM_POINT_SIZE)
-	gs.Enable(MULTISAMPLE)
+	// gs.Enable(MULTISAMPLE)
 	gs.Enable(gl.POLYGON_OFFSET_FILL)
 	// gs.Enable(gl.POLYGON_OFFSET_LINE)
 	// gs.Enable(gl.POLYGON_OFFSET_POINT)

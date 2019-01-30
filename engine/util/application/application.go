@@ -8,22 +8,19 @@ import (
 	"runtime/trace"
 	"time"
 
-	mobileApp "golang.org/x/mobile/app"
-	"golang.org/x/mobile/event/lifecycle"
-	"golang.org/x/mobile/event/paint"
-	"golang.org/x/mobile/event/size"
-	"golang.org/x/mobile/event/touch"
 	"golang.org/x/mobile/gl"
 
 	"github.com/wangzun/gogame/engine/camera"
 	"github.com/wangzun/gogame/engine/core"
 	"github.com/wangzun/gogame/engine/gls"
 	"github.com/wangzun/gogame/engine/math32"
+	"github.com/wangzun/gogame/engine/moblie"
 	"github.com/wangzun/gogame/engine/renderer"
 	"github.com/wangzun/gogame/engine/util/logger"
 )
 
 type Application struct {
+	show              bool                 // show on screen
 	core.Dispatcher                        // Embedded event dispatcher
 	core.TimerManager                      // Embedded timer manager
 	gl                *gls.GLS             // OpenGL state
@@ -44,6 +41,7 @@ type Application struct {
 	noglErrors   *bool         // No OpenGL check errors options
 	cpuProfile   *string       // File to write cpu profile to
 	execTrace    *string       // File to write execution trace data to
+	moblie       *moblie.Moblie
 }
 
 // Options defines initial options passed to the application creation function
@@ -80,6 +78,8 @@ func Create(ops Options) (*Application, error) {
 	app.TimerManager.Initialize()
 
 	// Initialize options defaults
+
+	app.show = false
 	app.swapInterval = new(int)
 	app.targetFPS = new(uint)
 	app.noglErrors = new(bool)
@@ -106,13 +106,17 @@ func Create(ops Options) (*Application, error) {
 	// Creates application logger
 	app.log = logger.New(ops.LogPrefix, nil)
 	app.log.AddWriter(logger.NewConsole(true))
-	nnet, err := logger.NewNet("tcp", "192.168.1.40:6666")
-	if err == nil {
-		app.log.AddWriter(nnet)
-		app.log.Info("init net log succ")
-	}
+	go func() {
+		nnet, err := logger.NewNet("tcp", "192.168.1.40:6666")
+		if err == nil {
+			app.log.AddWriter(nnet)
+			app.log.Info("init net log succ")
+		}
+	}()
 	app.log.SetFormat(logger.FTIME | logger.FMICROS)
 	app.log.SetLevel(ops.LogLevel)
+
+	// app.InitGls(mobileApp.GetContext())
 
 	// Get the window manager
 	// Create OpenGL state
@@ -165,6 +169,8 @@ func Create(ops Options) (*Application, error) {
 	// app.renderer.SetScene(app.scene)
 	// Create frame rater
 	app.frameRater = NewFrameRater(*app.targetFPS)
+
+	app.moblie = moblie.NewMoblie()
 
 	// Sets the default window resize event handler
 	return app, nil
@@ -340,46 +346,91 @@ func (app *Application) Run() error {
 
 	app.startTime = time.Now()
 	app.frameTime = time.Now()
-	mobileApp.Main(func(a mobileApp.App) {
-		// var sz size.Event
-		var glctx gl.Context
-		for e := range a.Events() {
-			switch e := a.Filter(e).(type) {
-			case lifecycle.Event:
-				switch e.Crosses(lifecycle.StageVisible) {
-				case lifecycle.CrossOn:
-					glctx, _ = e.DrawContext.(gl.Context)
-					app.InitGls(glctx)
-					a.Send(paint.Event{})
-				case lifecycle.CrossOff:
-					break
-				}
-			case size.Event:
-				//sz = e
-				//touchX = float32(sz.WidthPx / 2)
-				//touchY = float32(sz.HeightPx / 2)
-			case paint.Event:
-				if e.External {
-					// As we are actively painting as fast as
-					// we can (usually 60 FPS), skip any paint
-					// events sent by the system.
-					continue
-				}
-				// app.ClearUI()
+	app.moblie.Subscribe(moblie.SystemAlive, func(evname string, ev interface{}) {
+		aliveEvent := ev.(*moblie.AliveEvent)
+		glctx := aliveEvent.Context
+		app.InitGls(glctx)
+		go func() {
+			for {
 				app.Loop()
-				a.Publish()
-
-				a.Send(paint.Event{})
-			case touch.Event:
-				//touchX = e.X
-				//touchY = e.Y
 			}
-		}
+		}()
 	})
+	app.moblie.Subscribe(moblie.SystemForeground, func(evname string, ev interface{}) {
+		foreEvent := ev.(*moblie.ForegroundEvent)
+		glctx := foreEvent.Context
+		app.gl.SetContext(glctx)
+		app.show = true
+
+	})
+	app.moblie.Subscribe(moblie.SystemBackground, func(evname string, ev interface{}) {
+		app.show = false
+	})
+	app.moblie.Run()
+	// mobileApp.Main(func(a mobileApp.App) {
+	// 	// var sz size.Event
+	// 	// var glctx gl.Context
+	// 	for e := range a.Events() {
+	// 		switch e := a.Filter(e).(type) {
+	// 		case lifecycle.Event:
+	// 			app.log.Info("lifecycle event : %s", e.String())
+	// 			app.log.Info(" dead : %d", e.Crosses(lifecycle.StageDead))
+	// 			app.log.Info(" visible : %d", e.Crosses(lifecycle.StageVisible))
+	// 			app.log.Info(" alive : %d", e.Crosses(lifecycle.StageAlive))
+	// 			app.log.Info(" focused : %d", e.Crosses(lifecycle.StageFocused))
+	// 			switch e.Crosses(lifecycle.StageAlive) {
+	// 			case lifecycle.CrossOn:
+	// 				glctx, _ := e.DrawContext.(gl.Context)
+	// 				app.InitGls(glctx)
+	// 				go func() {
+	// 					for {
+	// 						app.Loop(a)
+	// 					}
+	// 				}()
+	// 				// a.Send(paint.Event{})
+	// 			case lifecycle.CrossOff:
+	// 			}
+
+	// 			switch e.Crosses(lifecycle.StageFocused) {
+	// 			case lifecycle.CrossOn:
+	// 				glctx, _ := e.DrawContext.(gl.Context)
+	// 				app.gl.SetContext(glctx)
+	// 				app.show = true
+	// 			case lifecycle.CrossOff:
+	// 				app.show = false
+	// 			}
+	// 		case size.Event:
+	// 			app.log.Info("size event : %s", fmt.Sprintln(e))
+	// 			//sz = e
+	// 			//touchX = float32(sz.WidthPx / 2)
+	// 			//touchY = float32(sz.HeightPx / 2)
+	// 		case paint.Event:
+	// 			// app.log.Info("paint event : %s", fmt.Sprintln(e))
+	// 			if e.External {
+	// 				// As we are actively painting as fast as
+	// 				// we can (usually 60 FPS), skip any paint
+	// 				// events sent by the system.
+	// 				continue
+	// 			}
+	// 			// app.ClearUI()
+	// 			// app.Loop()
+	// 			// a.Publish()
+
+	// 			// a.Send(paint.Event{})
+	// 		case touch.Event:
+	// 			app.log.Info("touch event : %s", fmt.Sprintln(e))
+	// 			//touchX = e.X
+	// 			//touchY = e.Y
+	// 		}
+	// 	}
+	// })
 	return nil
 }
 
 func (app *Application) Loop() error {
+	if app.gl == nil {
+		return nil
+	}
 
 	defer func() {
 		if err := recover(); err != nil {
@@ -402,10 +453,17 @@ func (app *Application) Loop() error {
 	app.Dispatch(OnBeforeRender, nil)
 
 	// Renders the current scene and/or gui
-	_, err := app.renderer.Render(app.camera)
-	if err != nil {
-		panic(err)
+	if app.show {
+		isRender, err := app.renderer.Render(app.camera)
+		if err != nil {
+			panic(err)
+		}
+
+		if isRender {
+			app.moblie.Publish()
+		}
 	}
+
 	// fmt.Println("rendered ", rendered)
 	// Poll input events and process them
 	// Dispatch after render event
@@ -456,16 +514,10 @@ func (app *Application) InitGls(glctx gl.Context) {
 	// // Clears the screen
 	app.ClearUI()
 
-	// Creates camera
-	// app.CreateCamera()
-
 	// Creates orbit camera control
 	// It is important to do this after the root panel subscription
 	// to avoid GUI events being propagated to the orbit control.
 	// app.orbit = control.NewOrbitControl(app.camera, app.win)
-
-	// Creates scene for 3D objects
-	// app.scene = core.NewNode()
 
 	// Creates renderer
 	app.renderer = renderer.NewRenderer(gs)
