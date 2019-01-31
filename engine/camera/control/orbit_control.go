@@ -7,7 +7,6 @@ package control
 import (
 	"math"
 
-	"github.com/g3n/engine/window"
 	"github.com/wangzun/gogame/engine/camera"
 	"github.com/wangzun/gogame/engine/math32"
 	"github.com/wangzun/gogame/engine/moblie"
@@ -347,133 +346,27 @@ func (oc *OrbitControl) onTouch(evname string, ev interface{}) {
 		return
 	}
 
-	// mev := ev.(*moblie.TouchEvent)
-	// switch mev.Type {
-	// case moblie.TypeBegin:
-	// 	if !oc.EnableRotate {
-	// 		return
-	// 	}
-	// 	oc.state = stateRotate
-	// 	oc.rotateStart.Set(float32(mev.X), float32(mev.Y))
+	mev := ev.(*moblie.TouchEvent)
+	switch mev.Type {
+	case moblie.TypeBegin:
+		if !oc.EnableRotate {
+			return
+		}
+		oc.state = stateRotate
+		oc.rotateStart.Set(float32(mev.X), float32(mev.Y))
 
-	// case moblie.TypeMove:
-	// 	oc.rotateEnd.Set(float32(mev.X), float32(mev.Y))
-	// 	oc.rotateDelta.SubVectors(&oc.rotateEnd, &oc.rotateStart)
-	// 	oc.rotateStart = oc.rotateEnd
-	// 	// rotating across whole screen goes 360 degrees around
-	// 	width := oc.moblie.WidthPx
-	// 	height := oc.moblie.HeightPx
-	// 	oc.RotateLeft(2 * math32.Pi * oc.rotateDelta.X / float32(width) * oc.RotateSpeed)
-	// 	// rotating up and down along whole screen attempts to go 360, but limited to 180
-	// 	oc.RotateUp(2 * math32.Pi * oc.rotateDelta.Y / float32(height) * oc.RotateSpeed)
+	case moblie.TypeMove:
+		oc.rotateEnd.Set(float32(mev.X), float32(mev.Y))
+		oc.rotateDelta.SubVectors(&oc.rotateEnd, &oc.rotateStart)
+		oc.rotateStart = oc.rotateEnd
+		// rotating across whole screen goes 360 degrees around
+		width := oc.moblie.WidthPx
+		height := oc.moblie.HeightPx
+		oc.RotateLeft(2 * math32.Pi * oc.rotateDelta.X / float32(width) * oc.RotateSpeed)
+		// rotating up and down along whole screen attempts to go 360, but limited to 180
+		oc.RotateUp(2 * math32.Pi * oc.rotateDelta.Y / float32(height) * oc.RotateSpeed)
 
-	// case moblie.TypeEnd:
-	// 	oc.state = stateNone
-	// }
-	// mev := ev.(*window.MouseEvent)
-	// Mouse button pressed
-	// if mev.Action == window.Press {
-	// 	// Left button pressed sets Rotate state
-	// 	if mev.Button == window.MouseButtonLeft {
-	// 		if !oc.EnableRotate {
-	// 			return
-	// 		}
-	// 		oc.state = stateRotate
-	// 		oc.rotateStart.Set(float32(mev.Xpos), float32(mev.Ypos))
-	// 	} else
-	// 	// If a valid state is set requests mouse position events
-	// 	if oc.state != stateNone {
-	// 		oc.win.SubscribeID(window.OnCursor, &oc.subsPos, oc.onCursorPos)
-	// 	}
-	// 	return
-	// }
-
-	// // Mouse button released
-	// if mev.Action == window.Release {
-	// 	oc.state = stateNone
-	// }
-}
-
-// Called when cursor position event is received
-// func (oc *OrbitControl) onCursorPos(evname string, ev interface{}) {
-
-// 	// If control not enabled ignore event
-// 	if !oc.Enabled {
-// 		return
-// 	}
-
-// 	mev := ev.(*window.CursorEvent)
-// 	// Rotation
-// 	if oc.state == stateRotate {
-// 		oc.rotateEnd.Set(float32(mev.Xpos), float32(mev.Ypos))
-// 		oc.rotateDelta.SubVectors(&oc.rotateEnd, &oc.rotateStart)
-// 		oc.rotateStart = oc.rotateEnd
-// 		// rotating across whole screen goes 360 degrees around
-// 		width := oc.moblie.WidthPx
-// 		height := oc.moblie.HeightPx
-// 		oc.RotateLeft(2 * math32.Pi * oc.rotateDelta.X / float32(width) * oc.RotateSpeed)
-// 		// rotating up and down along whole screen attempts to go 360, but limited to 180
-// 		oc.RotateUp(2 * math32.Pi * oc.rotateDelta.Y / float32(height) * oc.RotateSpeed)
-// 		return
-// 	}
-
-// 	// Panning
-// 	if oc.state == statePan {
-// 		oc.panEnd.Set(float32(mev.Xpos), float32(mev.Ypos))
-// 		oc.panDelta.SubVectors(&oc.panEnd, &oc.panStart)
-// 		oc.panStart = oc.panEnd
-// 		oc.Pan(oc.panDelta.X, oc.panDelta.Y)
-// 		return
-// 	}
-
-// 	// Zooming
-// 	if oc.state == stateZoom {
-// 		oc.zoomEnd = float32(mev.Ypos)
-// 		oc.zoomDelta = oc.zoomEnd - oc.zoomStart
-// 		oc.zoomStart = oc.zoomEnd
-// 		oc.Zoom(oc.zoomDelta)
-// 	}
-// }
-
-// Called when mouse button scroll event is received
-func (oc *OrbitControl) onScroll(evname string, ev interface{}) {
-
-	if !oc.Enabled || !oc.EnableZoom || oc.state != stateNone {
-		return
+	case moblie.TypeEnd:
+		oc.state = stateNone
 	}
-	sev := ev.(*window.ScrollEvent)
-	oc.Zoom(float32(-sev.Yoffset))
-}
-
-// Called when key is pressed, released or repeats.
-
-func (oc *OrbitControl) pan(deltaX, deltaY float32, swidth, sheight int) {
-
-	// Perspective camera
-	if oc.camPersp != nil {
-		position := oc.cam.Position()
-		target := oc.cam.Target()
-		offset := position.Clone().Sub(&target)
-		targetDistance := offset.Length()
-		// Half the FOV is center to top of screen
-		targetDistance += math32.Tan((oc.camPersp.Fov() / 2.0) * math32.Pi / 180.0)
-		// we actually don't use screenWidth, since perspective camera is fixed to screen height
-		oc.panLeft(2 * deltaX * targetDistance / float32(sheight))
-		oc.panUp(2 * deltaY * targetDistance / float32(sheight))
-		return
-	}
-	// Orthographic camera
-	left, right, top, bottom, _, _ := oc.camOrtho.Planes()
-	oc.panLeft(deltaX * (right - left) / float32(swidth))
-	oc.panUp(deltaY * (top - bottom) / float32(sheight))
-}
-
-func (oc *OrbitControl) panLeft(distance float32) {
-
-	oc.panOffset.X += distance
-}
-
-func (oc *OrbitControl) panUp(distance float32) {
-
-	oc.panOffset.Y += distance
 }

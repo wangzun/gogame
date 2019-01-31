@@ -11,8 +11,9 @@ import (
 )
 
 type Moblie struct {
-	core.Dispatcher // Embedded event dispatcher
-	mApp            app.App
+	core.Dispatcher   // Embedded event dispatcher
+	mApp              app.App
+	WidthPx, HeightPx int
 }
 
 const SystemAlive = "moblie.SystemAlive"
@@ -39,10 +40,22 @@ type BackgroundEvent struct {
 }
 
 type SizeEvent struct {
+	WidthPx, HeightPx int
 }
 
 type TouchEvent struct {
+	X, Y     float32
+	Sequence int64
+	Type     Type
 }
+
+type Type byte
+
+const (
+	TypeBegin Type = iota
+	TypeMove
+	TypeEnd
+)
 
 func (m *Moblie) Run() {
 	app.Main(func(a app.App) {
@@ -75,9 +88,11 @@ func (m *Moblie) Run() {
 					m.Dispatch(SystemBackground, ae)
 				}
 			case size.Event:
-				se := &SizeEvent{}
+				se := &SizeEvent{WidthPx: e.WidthPx, HeightPx: e.HeightPx}
+				m.WidthPx = e.WidthPx
+				m.HeightPx = e.HeightPx
 				m.Dispatch(SystemSize, se)
-				//sz = e
+				// //sz = e
 				//touchX = float32(sz.WidthPx / 2)
 				//touchY = float32(sz.HeightPx / 2)
 			case paint.Event:
@@ -85,9 +100,9 @@ func (m *Moblie) Run() {
 					continue
 				}
 			case touch.Event:
-				te := &TouchEvent{}
+				te := &TouchEvent{X: e.X, Y: e.Y, Sequence: int64(e.Sequence), Type: Type(e.Type)}
 				m.Dispatch(SystemTouch, te)
-				//touchX = e.X
+				// //touchX = e.X
 				//touchY = e.Y
 			}
 		}

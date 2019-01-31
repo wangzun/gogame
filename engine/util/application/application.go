@@ -11,6 +11,7 @@ import (
 	"golang.org/x/mobile/gl"
 
 	"github.com/wangzun/gogame/engine/camera"
+	"github.com/wangzun/gogame/engine/camera/control"
 	"github.com/wangzun/gogame/engine/core"
 	"github.com/wangzun/gogame/engine/gls"
 	"github.com/wangzun/gogame/engine/math32"
@@ -20,28 +21,28 @@ import (
 )
 
 type Application struct {
-	show              bool                 // show on screen
-	core.Dispatcher                        // Embedded event dispatcher
-	core.TimerManager                      // Embedded timer manager
-	gl                *gls.GLS             // OpenGL state
-	log               *logger.Logger       // Default application logger
-	renderer          *renderer.Renderer   // Renderer object
-	camPersp          *camera.Perspective  // Perspective camera
-	camOrtho          *camera.Orthographic // Orthographic camera
-	camera            camera.ICamera       // Current camera
-	// orbit      *control.OrbitControl // Camera orbit controller
-	frameRater   *FrameRater   // Render loop frame rater
-	scene        *core.Node    // Node container for 3D tests
-	frameCount   uint64        // Frame counter
-	frameTime    time.Time     // Time at the start of the frame
-	frameDelta   time.Duration // Time delta from previous frame
-	startTime    time.Time     // Time at the start of the render loop
-	swapInterval *int          // Swap interval option
-	targetFPS    *uint         // Target FPS option
-	noglErrors   *bool         // No OpenGL check errors options
-	cpuProfile   *string       // File to write cpu profile to
-	execTrace    *string       // File to write execution trace data to
-	moblie       *moblie.Moblie
+	show              bool                  // show on screen
+	core.Dispatcher                         // Embedded event dispatcher
+	core.TimerManager                       // Embedded timer manager
+	gl                *gls.GLS              // OpenGL state
+	log               *logger.Logger        // Default application logger
+	renderer          *renderer.Renderer    // Renderer object
+	camPersp          *camera.Perspective   // Perspective camera
+	camOrtho          *camera.Orthographic  // Orthographic camera
+	camera            camera.ICamera        // Current camera
+	orbit             *control.OrbitControl // Camera orbit controller
+	frameRater        *FrameRater           // Render loop frame rater
+	scene             *core.Node            // Node container for 3D tests
+	frameCount        uint64                // Frame counter
+	frameTime         time.Time             // Time at the start of the frame
+	frameDelta        time.Duration         // Time delta from previous frame
+	startTime         time.Time             // Time at the start of the render loop
+	swapInterval      *int                  // Swap interval option
+	targetFPS         *uint                 // Target FPS option
+	noglErrors        *bool                 // No OpenGL check errors options
+	cpuProfile        *string               // File to write cpu profile to
+	execTrace         *string               // File to write execution trace data to
+	moblie            *moblie.Moblie
 }
 
 // Options defines initial options passed to the application creation function
@@ -367,63 +368,6 @@ func (app *Application) Run() error {
 		app.show = false
 	})
 	app.moblie.Run()
-	// mobileApp.Main(func(a mobileApp.App) {
-	// 	// var sz size.Event
-	// 	// var glctx gl.Context
-	// 	for e := range a.Events() {
-	// 		switch e := a.Filter(e).(type) {
-	// 		case lifecycle.Event:
-	// 			app.log.Info("lifecycle event : %s", e.String())
-	// 			app.log.Info(" dead : %d", e.Crosses(lifecycle.StageDead))
-	// 			app.log.Info(" visible : %d", e.Crosses(lifecycle.StageVisible))
-	// 			app.log.Info(" alive : %d", e.Crosses(lifecycle.StageAlive))
-	// 			app.log.Info(" focused : %d", e.Crosses(lifecycle.StageFocused))
-	// 			switch e.Crosses(lifecycle.StageAlive) {
-	// 			case lifecycle.CrossOn:
-	// 				glctx, _ := e.DrawContext.(gl.Context)
-	// 				app.InitGls(glctx)
-	// 				go func() {
-	// 					for {
-	// 						app.Loop(a)
-	// 					}
-	// 				}()
-	// 				// a.Send(paint.Event{})
-	// 			case lifecycle.CrossOff:
-	// 			}
-
-	// 			switch e.Crosses(lifecycle.StageFocused) {
-	// 			case lifecycle.CrossOn:
-	// 				glctx, _ := e.DrawContext.(gl.Context)
-	// 				app.gl.SetContext(glctx)
-	// 				app.show = true
-	// 			case lifecycle.CrossOff:
-	// 				app.show = false
-	// 			}
-	// 		case size.Event:
-	// 			app.log.Info("size event : %s", fmt.Sprintln(e))
-	// 			//sz = e
-	// 			//touchX = float32(sz.WidthPx / 2)
-	// 			//touchY = float32(sz.HeightPx / 2)
-	// 		case paint.Event:
-	// 			// app.log.Info("paint event : %s", fmt.Sprintln(e))
-	// 			if e.External {
-	// 				// As we are actively painting as fast as
-	// 				// we can (usually 60 FPS), skip any paint
-	// 				// events sent by the system.
-	// 				continue
-	// 			}
-	// 			// app.ClearUI()
-	// 			// app.Loop()
-	// 			// a.Publish()
-
-	// 			// a.Send(paint.Event{})
-	// 		case touch.Event:
-	// 			app.log.Info("touch event : %s", fmt.Sprintln(e))
-	// 			//touchX = e.X
-	// 			//touchY = e.Y
-	// 		}
-	// 	}
-	// })
 	return nil
 }
 
@@ -518,6 +462,7 @@ func (app *Application) InitGls(glctx gl.Context) {
 	// It is important to do this after the root panel subscription
 	// to avoid GUI events being propagated to the orbit control.
 	// app.orbit = control.NewOrbitControl(app.camera, app.win)
+	app.orbit = control.NewOrbitControl(app.camera, app.moblie)
 
 	// Creates renderer
 	app.renderer = renderer.NewRenderer(gs)
