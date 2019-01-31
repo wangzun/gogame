@@ -14,7 +14,7 @@ var anims []*animation.Animation
 
 func main() {
 
-	app, _ := application.Create(application.Options{})
+	app, _ := application.Create(application.Options{Control: true})
 
 	// Add lights to the scene
 	ambientLight := light.NewAmbient(&math32.Color{1.0, 1.0, 1.0}, 0.8)
