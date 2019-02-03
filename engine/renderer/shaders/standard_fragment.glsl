@@ -1,17 +1,19 @@
 //
 // Fragment Shader template
 //
+
+precision highp float;
 #include <material>
 
 // Inputs from Vertex shader
-in vec3 ColorFrontAmbdiff;
-in vec3 ColorFrontSpec;
-in vec3 ColorBackAmbdiff;
-in vec3 ColorBackSpec;
-in vec2 FragTexcoord;
+varying vec3 ColorFrontAmbdiff;
+varying vec3 ColorFrontSpec;
+varying vec3 ColorBackAmbdiff;
+varying vec3 ColorBackSpec;
+varying vec2 FragTexcoord;
 
 // Output
-out vec4 FragColor;
+// out vec4 FragColor;
 
 
 void main() {
@@ -39,6 +41,7 @@ void main() {
         colorAmbDiff = vec4(ColorBackAmbdiff, MatOpacity);
         colorSpec = vec4(ColorBackSpec, 0);
     }
-    FragColor = min(colorAmbDiff * texMixed + colorSpec, vec4(1));
+    // FragColor = min(colorAmbDiff * texMixed + colorSpec, vec4(1));
+    gl_FragColor = min(colorAmbDiff * texMixed + colorSpec, vec4(1));
 }
 

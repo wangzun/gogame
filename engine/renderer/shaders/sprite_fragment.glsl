@@ -2,14 +2,16 @@
 // Fragment shader for sprite
 //
 
+precision highp float;
+
 #include <material>
 
 // Inputs from vertex shader
-in vec3 Color;
-in vec2 FragTexcoord;
+varying vec3 Color;
+varying vec2 FragTexcoord;
 
 // Output
-out vec4 FragColor;
+// out vec4 FragColor;
 
 void main() {
 
@@ -17,7 +19,7 @@ void main() {
     vec4 texCombined = vec4(1);
 #if MAT_TEXTURES>0
     for (int i = 0; i < {{.MatTexturesMax}}; i++) {
-        vec4 texcolor = texture(MatTexture[i], FragTexcoord * MatTexRepeat(i) + MatTexOffset(i));
+        vec4 texcolor = texture2D(MatTexture[i], FragTexcoord * MatTexRepeat(i) + MatTexOffset(i));
         if (i == 0) {
             texCombined = texcolor;
         } else {
@@ -27,6 +29,7 @@ void main() {
 #endif
 
     // Combine material color with texture
-    FragColor = min(vec4(Color, MatOpacity) * texCombined, vec4(1));
+    // FragColor = min(vec4(Color, MatOpacity) * texCombined, vec4(1));
+    gl_FragColor = min(vec4(Color, MatOpacity) * texCombined, vec4(1));
 }
 

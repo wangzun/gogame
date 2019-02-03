@@ -309,6 +309,8 @@ const sprite_vertex_source = `//
 // Vertex shader for sprites
 //
 
+precision highp float;
+
 #include <attributes>
 
 // Input uniforms
@@ -317,8 +319,8 @@ uniform mat4 MVP;
 #include <material>
 
 // Outputs for fragment shader
-out vec3 Color;
-out vec2 FragTexcoord;
+varying vec3 Color;
+varying vec2 FragTexcoord;
 
 void main() {
 
@@ -472,13 +474,18 @@ void main() {
 const panel_vertex_source = `//
 // Vertex shader panel
 //
+#ifdef GL_ES
+precision highp float;
+#endif
+
+
 #include <attributes>
 
 // Model uniforms
 uniform mat4 ModelMatrix;
 
 // Outputs for fragment shader
-out vec2 FragTexcoord;
+varying vec2 FragTexcoord;
 
 
 void main() {
@@ -495,7 +502,9 @@ void main() {
 
 `
 
-const point_fragment_source = `#include <material>
+const point_fragment_source = `
+precision highp float;
+#include <material>
 
 // GLSL 3.30 does not allow indexing texture sampler with non constant values.
 // This macro is used to mix the texture with the specified index with the material color.
@@ -503,7 +512,7 @@ const point_fragment_source = `#include <material>
 #define MIX_POINT_TEXTURE(i)                                                                                     \
     if (MatTexVisible(i)) {                                                                                      \
         vec2 pt = gl_PointCoord - vec2(0.5);                                                                     \
-        vec4 texColor = texture(MatTexture[i], (Rotation * pt + vec2(0.5)) * MatTexRepeat(i) + MatTexOffset(i)); \
+        vec4 texColor = texture2D(MatTexture[i], (Rotation * pt + vec2(0.5)) * MatTexRepeat(i) + MatTexOffset(i)); \
         if (i == 0) {                                                                                            \
             texMixed = texColor;                                                                                 \
         } else {                                                                                                 \
@@ -512,11 +521,11 @@ const point_fragment_source = `#include <material>
     }
 
 // Inputs from vertex shader
-in vec3 Color;
-flat in mat2 Rotation;
+varying vec3 Color;
+flat varying mat2 Rotation;
 
 // Output
-out vec4 FragColor;
+// out vec4 FragColor;
 
 void main() {
 
@@ -534,7 +543,8 @@ void main() {
     #endif
 
     // Generates final color
-    FragColor = min(vec4(Color, MatOpacity) * texMixed, vec4(1));
+    // FragColor = min(vec4(Color, MatOpacity) * texMixed, vec4(1));
+    gl_Position = min(vec4(Color, MatOpacity) * texMixed, vec4(1));
 }
 
 `
@@ -542,6 +552,11 @@ void main() {
 const panel_fragment_source = `//
 // Fragment Shader template
 //
+#ifdef GL_ES
+precision highp float;
+#endif
+
+
 
 // Texture uniforms
 uniform sampler2D	MatTexture;
@@ -554,7 +569,7 @@ uniform vec2		MatTexinfo[3];
 #define MatTexVisible	    bool(MatTexinfo[2].y) // not used
 
 // Inputs from vertex shader
-in vec2 FragTexcoord;
+varying vec2 FragTexcoord;
 
 // Input uniform
 uniform vec4 Panel[8];
@@ -568,7 +583,7 @@ uniform vec4 Panel[8];
 #define TextureValid	bool(Panel[7].x)  // texture valid flag
 
 // Output
-out vec4 FragColor;
+// out vec4 FragColor;
 
 
 /***
@@ -622,7 +637,7 @@ void main() {
             vec2 offset = vec2(-Content[0], -Content[1]);
             vec2 factor = vec2(1/Content[2], 1/Content[3]);
             vec2 texcoord = (FragTexcoord + offset) * factor;
-            vec4 texColor = texture(MatTexture, texcoord * MatTexRepeat + MatTexOffset);
+            vec4 texColor = texture2D(MatTexture, texcoord * MatTexRepeat + MatTexOffset);
 
             // Mix content color with texture color.
             // Note that doing a simple linear interpolation (e.g. using mix()) is not correct!
@@ -661,7 +676,8 @@ void main() {
     }
 
     // Fragment is in margins area (always transparent)
-    FragColor = vec4(1,1,1,0);
+    // FragColor = vec4(1,1,1,0);
+    gl_FragColor = vec4(1,1,1,0);
 }
 
 `
@@ -686,7 +702,9 @@ void main() {
 
 `
 
-const point_vertex_source = `#include <attributes>
+const point_vertex_source = `
+precision highp float;
+#include <attributes>
 
 // Model uniforms
 uniform mat4 MVP;
@@ -695,8 +713,8 @@ uniform mat4 MVP;
 #include <material>
 
 // Outputs for fragment shader
-out vec3 Color;
-flat out mat2 Rotation;
+varying vec3 Color;
+flat varying mat2 Rotation;
 
 void main() {
 
@@ -1194,14 +1212,16 @@ const sprite_fragment_source = `//
 // Fragment shader for sprite
 //
 
+precision highp float;
+
 #include <material>
 
 // Inputs from vertex shader
-in vec3 Color;
-in vec2 FragTexcoord;
+varying vec3 Color;
+varying vec2 FragTexcoord;
 
 // Output
-out vec4 FragColor;
+// out vec4 FragColor;
 
 void main() {
 
@@ -1209,7 +1229,7 @@ void main() {
     vec4 texCombined = vec4(1);
 #if MAT_TEXTURES>0
     for (int i = 0; i < {{.MatTexturesMax}}; i++) {
-        vec4 texcolor = texture(MatTexture[i], FragTexcoord * MatTexRepeat(i) + MatTexOffset(i));
+        vec4 texcolor = texture2D(MatTexture[i], FragTexcoord * MatTexRepeat(i) + MatTexOffset(i));
         if (i == 0) {
             texCombined = texcolor;
         } else {
@@ -1219,7 +1239,8 @@ void main() {
 #endif
 
     // Combine material color with texture
-    FragColor = min(vec4(Color, MatOpacity) * texCombined, vec4(1));
+    // FragColor = min(vec4(Color, MatOpacity) * texCombined, vec4(1));
+    gl_FragColor = min(vec4(Color, MatOpacity) * texCombined, vec4(1));
 }
 
 `
@@ -1227,6 +1248,9 @@ void main() {
 const standard_vertex_source = `//
 // Vertex shader standard
 //
+
+
+precision highp float;
 #include <attributes>
 
 // Model uniforms
@@ -1241,11 +1265,11 @@ uniform mat4 MVP;
 #include <bones_vertex_declaration>
 
 // Outputs for the fragment shader.
-out vec3 ColorFrontAmbdiff;
-out vec3 ColorFrontSpec;
-out vec3 ColorBackAmbdiff;
-out vec3 ColorBackSpec;
-out vec2 FragTexcoord;
+varying vec3 ColorFrontAmbdiff;
+varying vec3 ColorFrontSpec;
+varying vec3 ColorBackAmbdiff;
+varying vec3 ColorBackSpec;
+varying vec2 FragTexcoord;
 
 void main() {
 
@@ -1285,17 +1309,19 @@ void main() {
 const standard_fragment_source = `//
 // Fragment Shader template
 //
+
+precision highp float;
 #include <material>
 
 // Inputs from Vertex shader
-in vec3 ColorFrontAmbdiff;
-in vec3 ColorFrontSpec;
-in vec3 ColorBackAmbdiff;
-in vec3 ColorBackSpec;
-in vec2 FragTexcoord;
+varying vec3 ColorFrontAmbdiff;
+varying vec3 ColorFrontSpec;
+varying vec3 ColorBackAmbdiff;
+varying vec3 ColorBackSpec;
+varying vec2 FragTexcoord;
 
 // Output
-out vec4 FragColor;
+// out vec4 FragColor;
 
 
 void main() {
@@ -1323,7 +1349,8 @@ void main() {
         colorAmbDiff = vec4(ColorBackAmbdiff, MatOpacity);
         colorSpec = vec4(ColorBackSpec, 0);
     }
-    FragColor = min(colorAmbDiff * texMixed + colorSpec, vec4(1));
+    // FragColor = min(colorAmbDiff * texMixed + colorSpec, vec4(1));
+    gl_FragColor = min(colorAmbDiff * texMixed + colorSpec, vec4(1));
 }
 
 `

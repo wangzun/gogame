@@ -1,3 +1,5 @@
+
+precision highp float;
 #include <attributes>
 
 // Model uniforms
@@ -7,8 +9,8 @@ uniform mat4 MVP;
 #include <material>
 
 // Outputs for fragment shader
-out vec3 Color;
-flat out mat2 Rotation;
+varying vec3 Color;
+flat varying mat2 Rotation;
 
 void main() {
 

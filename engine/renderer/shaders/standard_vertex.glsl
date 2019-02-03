@@ -1,6 +1,9 @@
 //
 // Vertex shader standard
 //
+
+
+precision highp float;
 #include <attributes>
 
 // Model uniforms
@@ -15,11 +18,11 @@ uniform mat4 MVP;
 #include <bones_vertex_declaration>
 
 // Outputs for the fragment shader.
-out vec3 ColorFrontAmbdiff;
-out vec3 ColorFrontSpec;
-out vec3 ColorBackAmbdiff;
-out vec3 ColorBackSpec;
-out vec2 FragTexcoord;
+varying vec3 ColorFrontAmbdiff;
+varying vec3 ColorFrontSpec;
+varying vec3 ColorBackAmbdiff;
+varying vec3 ColorBackSpec;
+varying vec2 FragTexcoord;
 
 void main() {
 

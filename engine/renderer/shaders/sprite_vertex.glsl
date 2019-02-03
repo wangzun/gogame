@@ -2,6 +2,8 @@
 // Vertex shader for sprites
 //
 
+precision highp float;
+
 #include <attributes>
 
 // Input uniforms
@@ -10,8 +12,8 @@ uniform mat4 MVP;
 #include <material>
 
 // Outputs for fragment shader
-out vec3 Color;
-out vec2 FragTexcoord;
+varying vec3 Color;
+varying vec2 FragTexcoord;
 
 void main() {
 

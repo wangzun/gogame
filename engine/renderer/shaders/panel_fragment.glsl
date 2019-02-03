@@ -1,6 +1,11 @@
 //
 // Fragment Shader template
 //
+#ifdef GL_ES
+precision highp float;
+#endif
+
+
 
 // Texture uniforms
 uniform sampler2D	MatTexture;
@@ -13,7 +18,7 @@ uniform vec2		MatTexinfo[3];
 #define MatTexVisible	    bool(MatTexinfo[2].y) // not used
 
 // Inputs from vertex shader
-in vec2 FragTexcoord;
+varying vec2 FragTexcoord;
 
 // Input uniform
 uniform vec4 Panel[8];
@@ -27,7 +32,7 @@ uniform vec4 Panel[8];
 #define TextureValid	bool(Panel[7].x)  // texture valid flag
 
 // Output
-out vec4 FragColor;
+// out vec4 FragColor;
 
 
 /***
@@ -81,7 +86,7 @@ void main() {
             vec2 offset = vec2(-Content[0], -Content[1]);
             vec2 factor = vec2(1/Content[2], 1/Content[3]);
             vec2 texcoord = (FragTexcoord + offset) * factor;
-            vec4 texColor = texture(MatTexture, texcoord * MatTexRepeat + MatTexOffset);
+            vec4 texColor = texture2D(MatTexture, texcoord * MatTexRepeat + MatTexOffset);
 
             // Mix content color with texture color.
             // Note that doing a simple linear interpolation (e.g. using mix()) is not correct!
@@ -120,6 +125,7 @@ void main() {
     }
 
     // Fragment is in margins area (always transparent)
-    FragColor = vec4(1,1,1,0);
+    // FragColor = vec4(1,1,1,0);
+    gl_FragColor = vec4(1,1,1,0);
 }
 

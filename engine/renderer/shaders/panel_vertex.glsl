@@ -1,13 +1,18 @@
 //
 // Vertex shader panel
 //
+#ifdef GL_ES
+precision highp float;
+#endif
+
+
 #include <attributes>
 
 // Model uniforms
 uniform mat4 ModelMatrix;
 
 // Outputs for fragment shader
-out vec2 FragTexcoord;
+varying vec2 FragTexcoord;
 
 
 void main() {

@@ -1,3 +1,5 @@
+
+precision highp float;
 #include <material>
 
 // GLSL 3.30 does not allow indexing texture sampler with non constant values.
@@ -6,7 +8,7 @@
 #define MIX_POINT_TEXTURE(i)                                                                                     \
     if (MatTexVisible(i)) {                                                                                      \
         vec2 pt = gl_PointCoord - vec2(0.5);                                                                     \
-        vec4 texColor = texture(MatTexture[i], (Rotation * pt + vec2(0.5)) * MatTexRepeat(i) + MatTexOffset(i)); \
+        vec4 texColor = texture2D(MatTexture[i], (Rotation * pt + vec2(0.5)) * MatTexRepeat(i) + MatTexOffset(i)); \
         if (i == 0) {                                                                                            \
             texMixed = texColor;                                                                                 \
         } else {                                                                                                 \
@@ -15,11 +17,11 @@
     }
 
 // Inputs from vertex shader
-in vec3 Color;
-flat in mat2 Rotation;
+varying vec3 Color;
+flat varying mat2 Rotation;
 
 // Output
-out vec4 FragColor;
+// out vec4 FragColor;
 
 void main() {
 
@@ -37,6 +39,7 @@ void main() {
     #endif
 
     // Generates final color
-    FragColor = min(vec4(Color, MatOpacity) * texMixed, vec4(1));
+    // FragColor = min(vec4(Color, MatOpacity) * texMixed, vec4(1));
+    gl_Position = min(vec4(Color, MatOpacity) * texMixed, vec4(1));
 }
 
