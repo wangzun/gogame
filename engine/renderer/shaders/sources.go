@@ -334,7 +334,7 @@ void main() {
     vec2 texcoord = VertexTexcoord;
 #if MAT_TEXTURES>0
     if (MatTexFlipY[0]) {
-        texcoord.y = 1 - texcoord.y;
+        texcoord.y = 1.0 - texcoord.y;
     }
 #endif
     FragTexcoord = texcoord;
@@ -457,7 +457,7 @@ void main() {
     vec2 texcoord = VertexTexcoord;
 #if MAT_TEXTURES>0
     if (MatTexFlipY(0)) {
-        texcoord.y = 1 - texcoord.y;
+        texcoord.y = 1.0 - texcoord.y;
     }
 #endif
     FragTexcoord = texcoord;
@@ -492,7 +492,7 @@ void main() {
 
     // Always flip texture coordinates
     vec2 texcoord = VertexTexcoord;
-    texcoord.y = 1 - texcoord.y;
+    texcoord.y = 1.0 - texcoord.y;
     FragTexcoord = texcoord;
 
     // Set position
@@ -1292,7 +1292,7 @@ void main() {
 #if MAT_TEXTURES > 0
     // Flips texture coordinate Y if requested.
     if (MatTexFlipY(0)) {
-        texcoord.y = 1 - texcoord.y;
+        texcoord.y = 1.0 - texcoord.y;
     }
 #endif
     FragTexcoord = texcoord;
@@ -1351,6 +1351,7 @@ void main() {
     }
     // FragColor = min(colorAmbDiff * texMixed + colorSpec, vec4(1));
     gl_FragColor = min(colorAmbDiff * texMixed + colorSpec, vec4(1));
+    // gl_FragColor = min(texMixed, vec4(1));
 }
 
 `

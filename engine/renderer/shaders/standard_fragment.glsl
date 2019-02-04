@@ -43,5 +43,6 @@ void main() {
     }
     // FragColor = min(colorAmbDiff * texMixed + colorSpec, vec4(1));
     gl_FragColor = min(colorAmbDiff * texMixed + colorSpec, vec4(1));
+    // gl_FragColor = min(texMixed, vec4(1));
 }
 

@@ -111,7 +111,7 @@ func Create(ops Options) (*Application, error) {
 	app.log = logger.New(ops.LogPrefix, nil)
 	app.log.AddWriter(logger.NewConsole(true))
 	go func() {
-		nnet, err := logger.NewNet("tcp", "192.168.1.40:6666")
+		nnet, err := logger.NewNet("tcp", "192.168.1.4:6666")
 		if err == nil {
 			app.log.AddWriter(nnet)
 			app.log.Info("init net log succ")

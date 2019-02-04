@@ -16,6 +16,10 @@ type PointLight struct {
 	vl    *example.PointLightMesh
 	hl    *example.PointLightMesh
 	count float64
+	spot1 *example.SpotLightMesh
+	spot2 *example.SpotLightMesh
+	spot3 *example.SpotLightMesh
+	rot   float32
 }
 
 func main() {
@@ -30,42 +34,42 @@ func (t *PointLight) Init() {
 	ambientLight := light.NewAmbient(&math32.Color{1.0, 1.0, 1.0}, 0.5)
 	a.Scene().Add(ambientLight)
 
-	geom1 := geometry.NewSphere(0.5, 32, 32, 0, math.Pi*2, 0, math.Pi)
-	mat1 := material.NewStandard(&math32.Color{0, 0, 0.6})
-	sphere1 := graphic.NewMesh(geom1, mat1)
-	sphere1.SetPositionX(1)
-	a.Scene().Add(sphere1)
+	// geom1 := geometry.NewSphere(0.5, 32, 32, 0, math.Pi*2, 0, math.Pi)
+	// mat1 := material.NewStandard(&math32.Color{0, 0, 0.6})
+	// sphere1 := graphic.NewMesh(geom1, mat1)
+	// sphere1.SetPositionX(1)
+	// a.Scene().Add(sphere1)
 
-	// Creates left sphere
-	geom2 := geometry.NewSphere(0.5, 32, 32, 0, math.Pi*2, 0, math.Pi)
-	mat2 := material.NewPhong(&math32.Color{0, 0.5, 0.0})
-	sphere2 := graphic.NewMesh(geom2, mat2)
-	sphere2.SetPositionX(-1)
-	a.Scene().Add(sphere2)
+	// // Creates left sphere
+	// geom2 := geometry.NewSphere(0.5, 32, 32, 0, math.Pi*2, 0, math.Pi)
+	// mat2 := material.NewPhong(&math32.Color{0, 0.5, 0.0})
+	// sphere2 := graphic.NewMesh(geom2, mat2)
+	// sphere2.SetPositionX(-1)
+	// a.Scene().Add(sphere2)
 
-	// // Creates left plane
-	geom3 := geometry.NewPlane(4, 4, 8, 8)
-	mat3 := material.NewStandard(&math32.Color{1, 1, 1})
-	pleft := graphic.NewMesh(geom3, mat3)
-	pleft.SetPosition(-2, 0, 0)
-	pleft.SetRotationY(math.Pi / 2)
-	a.Scene().Add(pleft)
+	// // // Creates left plane
+	// geom3 := geometry.NewPlane(4, 4, 8, 8)
+	// mat3 := material.NewStandard(&math32.Color{1, 1, 1})
+	// pleft := graphic.NewMesh(geom3, mat3)
+	// pleft.SetPosition(-2, 0, 0)
+	// pleft.SetRotationY(math.Pi / 2)
+	// a.Scene().Add(pleft)
 
-	// Creates right plane
-	geom4 := geometry.NewPlane(4, 4, 8, 8)
-	mat4 := material.NewStandard(&math32.Color{1, 1, 1})
-	pright := graphic.NewMesh(geom4, mat4)
-	pright.SetPosition(2, 0, 0)
-	pright.SetRotationY(-math.Pi / 2)
-	a.Scene().Add(pright)
+	// // Creates right plane
+	// geom4 := geometry.NewPlane(4, 4, 8, 8)
+	// mat4 := material.NewStandard(&math32.Color{1, 1, 1})
+	// pright := graphic.NewMesh(geom4, mat4)
+	// pright.SetPosition(2, 0, 0)
+	// pright.SetRotationY(-math.Pi / 2)
+	// a.Scene().Add(pright)
 
-	// // Creates top plane
-	geom5 := geometry.NewPlane(4, 4, 8, 8)
-	mat5 := material.NewStandard(&math32.Color{1, 1, 1})
-	ptop := graphic.NewMesh(geom5, mat5)
-	ptop.SetPosition(0, 2, 0)
-	ptop.SetRotationX(math.Pi / 2)
-	a.Scene().Add(ptop)
+	// // // Creates top plane
+	// geom5 := geometry.NewPlane(4, 4, 8, 8)
+	// mat5 := material.NewStandard(&math32.Color{1, 1, 1})
+	// ptop := graphic.NewMesh(geom5, mat5)
+	// ptop.SetPosition(0, 2, 0)
+	// ptop.SetRotationX(math.Pi / 2)
+	// a.Scene().Add(ptop)
 
 	// // Creates bottom plane
 	geom6 := geometry.NewPlane(4, 4, 8, 8)
@@ -92,17 +96,32 @@ func (t *PointLight) Init() {
 	// Creates horizontal point light
 	t.hl = example.NewPointLightMesh(&math32.Color{1, 1, 1})
 	a.Scene().Add(t.hl.Mesh)
+
+	t.spot1 = example.NewSpotLightMesh(&math32.Color{1, 0, 0})
+	t.spot1.Mesh.SetPosition(-1, 3, 1)
+	a.Scene().Add(t.spot1)
+
+	// Creates green spot light
+	t.spot2 = example.NewSpotLightMesh(&math32.Color{0, 1, 0})
+	t.spot2.Mesh.SetPosition(1, 3, -1)
+	a.Scene().Add(t.spot2.Mesh)
+
+	// Creates blue spot light
+	t.spot3 = example.NewSpotLightMesh(&math32.Color{0, 0, 1})
+	t.spot3.Mesh.SetPosition(0, 3, 0)
+	a.Scene().Add(t.spot3.Mesh)
+
 	a.Scene().SetScale(0.5, 0.5, 0.5)
 
 	a.CameraPersp().SetPosition(0, 0, 3)
 	a.CameraPersp().LookAt(&math32.Vector3{0, 0, 0})
 
-	a.Subscribe(application.OnBeforeRender, func(evname string, ev interface{}) {
-		t.vl.SetPosition(0, 1.5*float32(math.Sin(t.count)), 0)
-		t.hl.SetPosition(1.5*float32(math.Sin(t.count)), 1, 0)
-		t.count += 0.02
+	// a.Subscribe(application.OnBeforeRender, func(evname string, ev interface{}) {
+	// 	t.vl.SetPosition(0, 1.5*float32(math.Sin(t.count)), 0)
+	// 	t.hl.SetPosition(1.5*float32(math.Sin(t.count)), 1, 0)
+	// 	t.count += 0.02
 
-	})
+	// })
 
 	a.Run()
 

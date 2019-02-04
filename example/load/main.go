@@ -1,6 +1,8 @@
 package main
 
 import (
+	"math"
+
 	"github.com/wangzun/gogame/engine/animation"
 	"github.com/wangzun/gogame/engine/graphic"
 	"github.com/wangzun/gogame/engine/light"
@@ -55,6 +57,8 @@ func main() {
 	group.GetNode().SetPosition(-0.5, 0, -1)
 	group.GetNode().SetScale(0.3, 0.3, 0.3)
 	app.Scene().Add(group)
+
+	app.Scene().SetRotationZ(-math.Pi / 2)
 
 	for i := range gltfjson.Animations {
 		anim, _ := gltfjson.LoadAnimation(i)
