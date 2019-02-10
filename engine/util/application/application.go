@@ -14,6 +14,7 @@ import (
 	"github.com/wangzun/gogame/engine/camera/control"
 	"github.com/wangzun/gogame/engine/core"
 	"github.com/wangzun/gogame/engine/gls"
+	"github.com/wangzun/gogame/engine/gui"
 	"github.com/wangzun/gogame/engine/math32"
 	"github.com/wangzun/gogame/engine/moblie"
 	"github.com/wangzun/gogame/engine/renderer"
@@ -31,6 +32,7 @@ type Application struct {
 	camOrtho          *camera.Orthographic  // Orthographic camera
 	camera            camera.ICamera        // Current camera
 	orbit             *control.OrbitControl // Camera orbit controller
+	guiroot           *gui.Root             // Gui root panel
 	frameRater        *FrameRater           // Render loop frame rater
 	scene             *core.Node            // Node container for 3D tests
 	frameCount        uint64                // Frame counter
@@ -175,6 +177,8 @@ func Create(ops Options) (*Application, error) {
 	app.frameRater = NewFrameRater(*app.targetFPS)
 
 	app.moblie = moblie.NewMoblie()
+	app.guiroot = gui.NewRoot(app.moblie)
+	app.guiroot.SetColor(math32.NewColor("silver"))
 
 	// Sets the default window resize event handler
 	return app, nil
@@ -209,6 +213,18 @@ func (app *Application) Scene() *core.Node {
 func (app *Application) SetScene(scene *core.Node) {
 
 	app.renderer.SetScene(scene)
+}
+
+func (app *Application) Gui() *gui.Root {
+
+	return app.guiroot
+}
+
+// SetGui sets the root panel of the gui to be rendered
+func (app *Application) SetGui(root *gui.Root) {
+
+	app.guiroot = root
+	app.renderer.SetGui(app.guiroot)
 }
 
 // // SetPanel3D sets the gui panel inside which the 3D scene is shown.
@@ -476,6 +492,8 @@ func (app *Application) InitGls(glctx gl.Context) {
 		app.log.Error("Error from AddDefaulShaders:%v", err)
 		panic(err)
 	}
+
 	app.renderer.SetScene(app.scene)
+	app.renderer.SetGui(app.guiroot)
 
 }

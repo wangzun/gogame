@@ -11,6 +11,7 @@ import (
 	"github.com/wangzun/gogame/engine/core"
 	"github.com/wangzun/gogame/engine/gls"
 	"github.com/wangzun/gogame/engine/graphic"
+	"github.com/wangzun/gogame/engine/gui"
 
 	// "github.com/wangzun/gogame/engine/gui"
 
@@ -27,8 +28,8 @@ type Renderer struct {
 	scene     core.INode // Node containing 3D scene to render
 
 	// --phone GUI TODO--
-	// panelGui     gui.IPanel                 // Panel containing GUI to render
-	// panel3D      gui.IPanel                 // Panel which contains the 3D scene
+	panelGui gui.IPanel // Panel containing GUI to render
+	panel3D  gui.IPanel // Panel which contains the 3D scene
 
 	ambLights    []*light.Ambient           // Array of ambient lights for last scene
 	dirLights    []*light.Directional       // Array of directional lights for last scene
@@ -44,12 +45,12 @@ type Renderer struct {
 	sortObjects  bool                       // Flag indicating whether objects should be sorted before rendering
 
 	// --phone GUI TODO--
-	// redrawGui    bool                       // Flag indicating the gui must be redrawn completely
+	redrawGui bool // Flag indicating the gui must be redrawn completely
 
 	rendered bool // Flag indicating if anything was rendered
 
 	// --phone GUI TODO--
-	// panList      []gui.IPanel // list of panels to render
+	panList []gui.IPanel // list of panels to render
 
 	frameBuffers int // Number of frame buffers
 	frameCount   int // Current number of frame buffers to write
@@ -62,7 +63,7 @@ type Stats struct {
 	Lights   int // Number of lights rendered
 
 	// --phone GUI TODO--
-	// Panels   int // Number of Gui panels rendered
+	Panels int // Number of Gui panels rendered
 
 	Others int // Number of other objects rendered
 }
@@ -85,7 +86,7 @@ func NewRenderer(gs *gls.GLS) *Renderer {
 	r.grmatsTransp = make([]*graphic.GraphicMaterial, 0)
 
 	// --phone GUI TODO--
-	// r.panList = make([]gui.IPanel, 0)
+	r.panList = make([]gui.IPanel, 0)
 
 	r.frameBuffers = 2
 	r.sortObjects = true
@@ -122,10 +123,10 @@ func (r *Renderer) AddProgram(name, vertex, frag string, others ...string) {
 // If set to nil, no Gui will be rendered.
 
 // --phone GUI TODO--
-// func (r *Renderer) SetGui(gui gui.IPanel) {
+func (r *Renderer) SetGui(gui gui.IPanel) {
 
-// 	r.panelGui = gui
-// }
+	r.panelGui = gui
+}
 
 // SetGuiPanel3D sets the gui panel inside which the 3D scene is shown.
 // This informs the renderer that the Gui elements over this panel
@@ -133,18 +134,18 @@ func (r *Renderer) AddProgram(name, vertex, frag string, others ...string) {
 // This panel panel must not be renderable, otherwise it will cover the 3D scene.
 
 // --phone GUI TODO--
-// func (r *Renderer) SetGuiPanel3D(panel3D gui.IPanel) {
+func (r *Renderer) SetGuiPanel3D(panel3D gui.IPanel) {
 
-// 	r.panel3D = panel3D
-// }
+	r.panel3D = panel3D
+}
 
 // Panel3D returns the current gui panel over the 3D scene.
 
 // --phone GUI TODO--
-// func (r *Renderer) Panel3D() gui.IPanel {
+func (r *Renderer) Panel3D() gui.IPanel {
 
-// 	return r.panel3D
-// }
+	return r.panel3D
+}
 
 // SetScene sets the 3D scene to be rendered.
 // If set to nil, no 3D scene will be rendered.
@@ -177,7 +178,7 @@ func (r *Renderer) ObjectSorting() bool {
 func (r *Renderer) Render(icam camera.ICamera) (bool, error) {
 
 	// --phone GUI TODO--
-	// r.redrawGui = false
+	r.redrawGui = false
 
 	r.rendered = false
 	r.stats = Stats{}
@@ -192,12 +193,12 @@ func (r *Renderer) Render(icam camera.ICamera) (bool, error) {
 	// Renders the Gui over the 3D scene
 
 	// --phone GUI TODO--
-	// if r.panelGui != nil {
-	// 	err := r.renderGui()
-	// 	if err != nil {
-	// 		return r.rendered, err
-	// 	}
-	// }
+	if r.panelGui != nil {
+		err := r.renderGui()
+		if err != nil {
+			return r.rendered, err
+		}
+	}
 
 	r.prevStats = r.stats
 	return r.rendered, nil
@@ -375,28 +376,29 @@ func (r *Renderer) renderScene(iscene core.INode, icam camera.ICamera) error {
 		// sets scissor to avoid erasing gui elements outside of this panel
 
 		// ---phone GUI TODO----
-		// if r.panel3D != nil {
-		// 	pos := r.panel3D.GetPanel().Pospix()
-		// 	width, height := r.panel3D.GetPanel().Size()
+		if r.panel3D != nil {
+			pos := r.panel3D.GetPanel().Pospix()
+			width, height := r.panel3D.GetPanel().Size()
 
-		// 	// Get scale of window (for HiDPI support)
-		// 	sX64, sY64 := r.panel3D.Root().Window().Scale()
-		// 	sX := float32(sX64)
-		// 	sY := float32(sY64)
+			// Get scale of window (for HiDPI support)
+			sX64, sY64 := r.panel3D.Root().GetWH()
 
-		// 	// Modify position and height of scissor according to window scale (for HiDPI support)
-		// 	width *= sX
-		// 	height *= sY
-		// 	pos.X *= sX
-		// 	pos.Y *= sY
+			sX := float32(sX64)
+			sY := float32(sY64)
 
-		// 	_, _, _, viewheight := r.gs.GetViewport()
-		// 	r.gs.Enable(gls.SCISSOR_TEST)
-		// 	r.gs.Scissor(int32(pos.X), viewheight-int32(pos.Y)-int32(height), uint32(width), uint32(height))
-		// } else {
-		// 	r.gs.Disable(gls.SCISSOR_TEST)
-		// 	r.redrawGui = true
-		// }
+			// Modify position and height of scissor according to window scale (for HiDPI support)
+			width *= sX
+			height *= sY
+			pos.X *= sX
+			pos.Y *= sY
+
+			_, _, _, viewheight := r.gs.GetViewport()
+			r.gs.Enable(gls.SCISSOR_TEST)
+			r.gs.Scissor(int32(pos.X), viewheight-int32(pos.Y)-int32(height), uint32(width), uint32(height))
+		} else {
+			r.gs.Disable(gls.SCISSOR_TEST)
+			r.redrawGui = true
+		}
 
 		// Clears the area inside the current scissor
 		r.gs.Clear(gls.DEPTH_BUFFER_BIT | gls.STENCIL_BUFFER_BIT | gls.COLOR_BUFFER_BIT)
@@ -468,190 +470,190 @@ func (r *Renderer) renderScene(iscene core.INode, icam camera.ICamera) error {
 // renderGui renders the Gui
 
 // ---phone GUI TODO----
-// func (r *Renderer) renderGui() error {
+func (r *Renderer) renderGui() error {
 
-// 	// If no 3D scene was rendered sets Gui panels as renderable for background
-// 	// User must define the colors
-// 	if (len(r.rgraphics) == 0) && (len(r.cgraphics) == 0) {
-// 		r.panelGui.SetRenderable(true)
-// 		if r.panel3D != nil {
-// 			r.panel3D.SetRenderable(true)
-// 		}
-// 	} else {
-// 		r.panelGui.SetRenderable(false)
-// 		if r.panel3D != nil {
-// 			r.panel3D.SetRenderable(false)
-// 		}
-// 	}
+	// If no 3D scene was rendered sets Gui panels as renderable for background
+	// User must define the colors
+	if (len(r.rgraphics) == 0) && (len(r.cgraphics) == 0) {
+		r.panelGui.SetRenderable(true)
+		if r.panel3D != nil {
+			r.panel3D.SetRenderable(true)
+		}
+	} else {
+		r.panelGui.SetRenderable(false)
+		if r.panel3D != nil {
+			r.panel3D.SetRenderable(false)
+		}
+	}
 
-// 	// Clears list of panels to render
-// 	r.panList = r.panList[0:0]
-// 	// Redraw all GUI elements elements (panel3D == nil and 3D scene drawn)
-// 	if r.redrawGui {
-// 		r.appendPanel(r.panelGui)
-// 		// Redraw GUI elements only if changed
-// 		// Set the number of frame buffers to draw these changes
-// 	} else if r.checkChanged(r.panelGui) {
-// 		r.appendPanel(r.panelGui)
-// 		r.frameCount = r.frameBuffers
-// 		// No change, but need to update frame buffers
-// 	} else if r.frameCount > 0 {
-// 		r.appendPanel(r.panelGui)
-// 		// No change, draw only panels over 3D if any
-// 	} else {
-// 		r.getPanelsOver3D()
-// 	}
-// 	if len(r.panList) == 0 {
-// 		return nil
-// 	}
+	// Clears list of panels to render
+	r.panList = r.panList[0:0]
+	// Redraw all GUI elements elements (panel3D == nil and 3D scene drawn)
+	if r.redrawGui {
+		r.appendPanel(r.panelGui)
+		// Redraw GUI elements only if changed
+		// Set the number of frame buffers to draw these changes
+	} else if r.checkChanged(r.panelGui) {
+		r.appendPanel(r.panelGui)
+		r.frameCount = r.frameBuffers
+		// No change, but need to update frame buffers
+	} else if r.frameCount > 0 {
+		r.appendPanel(r.panelGui)
+		// No change, draw only panels over 3D if any
+	} else {
+		r.getPanelsOver3D()
+	}
+	if len(r.panList) == 0 {
+		return nil
+	}
 
-// 	// Updates panels bounds and relative positions
-// 	r.panelGui.GetPanel().UpdateMatrixWorld()
-// 	// Disable the scissor test which could have been set by the 3D scene renderer
-// 	// and then clear the depth buffer, so the panels will be rendered over the 3D scene.
-// 	r.gs.Disable(gls.SCISSOR_TEST)
-// 	r.gs.Clear(gls.DEPTH_BUFFER_BIT)
+	// Updates panels bounds and relative positions
+	r.panelGui.GetPanel().UpdateMatrixWorld()
+	// Disable the scissor test which could have been set by the 3D scene renderer
+	// and then clear the depth buffer, so the panels will be rendered over the 3D scene.
+	r.gs.Disable(gls.SCISSOR_TEST)
+	r.gs.Clear(gls.DEPTH_BUFFER_BIT)
 
-// 	// Render panels
-// 	for i := 0; i < len(r.panList); i++ {
-// 		err := r.renderPanel(r.panList[i])
-// 		if err != nil {
-// 			return err
-// 		}
-// 	}
-// 	r.frameCount--
-// 	r.rendered = true
-// 	return nil
-// }
+	// Render panels
+	for i := 0; i < len(r.panList); i++ {
+		err := r.renderPanel(r.panList[i])
+		if err != nil {
+			return err
+		}
+	}
+	r.frameCount--
+	r.rendered = true
+	return nil
+}
 
 // getPanelsOver3D builds list of panels over 3D to be rendered
 
 // ---phone GUI TODO----
-// func (r *Renderer) getPanelsOver3D() {
+func (r *Renderer) getPanelsOver3D() {
 
-// 	// If panel3D not set or renderable, nothing to do
-// 	if r.panel3D == nil || r.panel3D.Renderable() {
-// 		return
-// 	}
+	// If panel3D not set or renderable, nothing to do
+	if r.panel3D == nil || r.panel3D.Renderable() {
+		return
+	}
 
-// 	// Internal recursive function to check if any child of the
-// 	// specified panel is unbounded and over 3D.
-// 	// If it is, it is inserted in the list of panels to render.
-// 	var checkUnbounded func(pan *gui.Panel)
-// 	checkUnbounded = func(pan *gui.Panel) {
+	// Internal recursive function to check if any child of the
+	// specified panel is unbounded and over 3D.
+	// If it is, it is inserted in the list of panels to render.
+	var checkUnbounded func(pan *gui.Panel)
+	checkUnbounded = func(pan *gui.Panel) {
 
-// 		for i := 0; i < len(pan.Children()); i++ {
-// 			child := pan.Children()[i].(gui.IPanel).GetPanel()
-// 			if !child.Bounded() && r.checkPanelOver3D(child) {
-// 				r.appendPanel(child)
-// 				continue
-// 			}
-// 			checkUnbounded(child)
-// 		}
-// 	}
+		for i := 0; i < len(pan.Children()); i++ {
+			child := pan.Children()[i].(gui.IPanel).GetPanel()
+			if !child.Bounded() && r.checkPanelOver3D(child) {
+				r.appendPanel(child)
+				continue
+			}
+			checkUnbounded(child)
+		}
+	}
 
-// 	// For all children of the Gui, checks if it is over the 3D panel
-// 	children := r.panelGui.GetPanel().Children()
-// 	for i := 0; i < len(children); i++ {
-// 		pan := children[i].(gui.IPanel).GetPanel()
-// 		if !pan.Visible() {
-// 			continue
-// 		}
-// 		if r.checkPanelOver3D(pan) {
-// 			r.appendPanel(pan)
-// 			continue
-// 		}
-// 		// Current child is not over 3D but can have an unbounded child which is
-// 		checkUnbounded(pan)
-// 	}
-// }
+	// For all children of the Gui, checks if it is over the 3D panel
+	children := r.panelGui.GetPanel().Children()
+	for i := 0; i < len(children); i++ {
+		pan := children[i].(gui.IPanel).GetPanel()
+		if !pan.Visible() {
+			continue
+		}
+		if r.checkPanelOver3D(pan) {
+			r.appendPanel(pan)
+			continue
+		}
+		// Current child is not over 3D but can have an unbounded child which is
+		checkUnbounded(pan)
+	}
+}
 
 // renderPanel renders the specified panel and all its children
 // and then sets the panel as not changed.
 
 // ---phone GUI TODO----
-// func (r *Renderer) renderPanel(ipan gui.IPanel) error {
+func (r *Renderer) renderPanel(ipan gui.IPanel) error {
 
-// 	// If panel not visible, ignore it and all its children
-// 	pan := ipan.GetPanel()
-// 	if !pan.Visible() {
-// 		pan.SetChanged(false)
-// 		return nil
-// 	}
-// 	// If panel is renderable, renders it
-// 	if pan.Renderable() {
-// 		// Sets shader program for the panel's material
-// 		grmat := pan.GetGraphic().Materials()[0]
-// 		mat := grmat.IMaterial().GetMaterial()
-// 		r.specs.Name = mat.Shader()
-// 		r.specs.ShaderUnique = mat.ShaderUnique()
-// 		_, err := r.shaman.SetProgram(&r.specs)
-// 		if err != nil {
-// 			return err
-// 		}
-// 		// Render this panel's graphic material
-// 		grmat.Render(r.gs, &r.rinfo)
-// 		r.stats.Panels++
-// 	}
-// 	pan.SetChanged(false)
-// 	// Renders this panel children
-// 	for i := 0; i < len(pan.Children()); i++ {
-// 		err := r.renderPanel(pan.Children()[i].(gui.IPanel))
-// 		if err != nil {
-// 			return err
-// 		}
-// 	}
-// 	return nil
-// }
+	// If panel not visible, ignore it and all its children
+	pan := ipan.GetPanel()
+	if !pan.Visible() {
+		pan.SetChanged(false)
+		return nil
+	}
+	// If panel is renderable, renders it
+	if pan.Renderable() {
+		// Sets shader program for the panel's material
+		grmat := pan.GetGraphic().Materials()[0]
+		mat := grmat.IMaterial().GetMaterial()
+		r.specs.Name = mat.Shader()
+		r.specs.ShaderUnique = mat.ShaderUnique()
+		_, err := r.shaman.SetProgram(&r.specs)
+		if err != nil {
+			return err
+		}
+		// Render this panel's graphic material
+		grmat.Render(r.gs, &r.rinfo)
+		r.stats.Panels++
+	}
+	pan.SetChanged(false)
+	// Renders this panel children
+	for i := 0; i < len(pan.Children()); i++ {
+		err := r.renderPanel(pan.Children()[i].(gui.IPanel))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
 // appendPanel appends the specified panel to the list of panels to render.
 // Currently there is no need to check for duplicates.
 
 // ---phone GUI TODO----
-// func (r *Renderer) appendPanel(ipan gui.IPanel) {
+func (r *Renderer) appendPanel(ipan gui.IPanel) {
 
-// 	r.panList = append(r.panList, ipan)
-// }
+	r.panList = append(r.panList, ipan)
+}
 
 // checkChanged checks if the specified panel or any of its children is changed
 
 // ---phone GUI TODO----
-// func (r *Renderer) checkChanged(ipan gui.IPanel) bool {
+func (r *Renderer) checkChanged(ipan gui.IPanel) bool {
 
-// 	// Unbounded panels are checked even if not visible
-// 	pan := ipan.GetPanel()
-// 	if !pan.Bounded() && pan.Changed() {
-// 		pan.SetChanged(false)
-// 		return true
-// 	}
-// 	// Ignore invisible panel and its children
-// 	if !pan.Visible() {
-// 		return false
-// 	}
-// 	if pan.Changed() && pan.Renderable() {
-// 		return true
-// 	}
-// 	for i := 0; i < len(pan.Children()); i++ {
-// 		res := r.checkChanged(pan.Children()[i].(gui.IPanel))
-// 		if res {
-// 			return res
-// 		}
-// 	}
-// 	return false
-// }
+	// Unbounded panels are checked even if not visible
+	pan := ipan.GetPanel()
+	if !pan.Bounded() && pan.Changed() {
+		pan.SetChanged(false)
+		return true
+	}
+	// Ignore invisible panel and its children
+	if !pan.Visible() {
+		return false
+	}
+	if pan.Changed() && pan.Renderable() {
+		return true
+	}
+	for i := 0; i < len(pan.Children()); i++ {
+		res := r.checkChanged(pan.Children()[i].(gui.IPanel))
+		if res {
+			return res
+		}
+	}
+	return false
+}
 
 // checkPanelOver3D checks if the specified panel is over
 // the area where the 3D scene will be rendered.
 
 // ---phone GUI TODO----
-// func (r *Renderer) checkPanelOver3D(ipan gui.IPanel) bool {
+func (r *Renderer) checkPanelOver3D(ipan gui.IPanel) bool {
 
-// 	pan := ipan.GetPanel()
-// 	if !pan.Visible() {
-// 		return false
-// 	}
-// 	if r.panel3D.GetPanel().Intersects(pan) {
-// 		return true
-// 	}
-// 	return false
-// }
+	pan := ipan.GetPanel()
+	if !pan.Visible() {
+		return false
+	}
+	if r.panel3D.GetPanel().Intersects(pan) {
+		return true
+	}
+	return false
+}
