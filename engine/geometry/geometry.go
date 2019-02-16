@@ -543,6 +543,8 @@ func (g *Geometry) RenderSetup(gs *gls.GLS) {
 	for _, vbo := range g.vbos {
 		vbo.Transfer(gs)
 	}
+
+	// fmt.Println(g.indices)
 	// gs.BindBuffer(gls.ELEMENT_ARRAY_BUFFER, g.handleIndices)
 
 	// // Update Indices buffer if necessary

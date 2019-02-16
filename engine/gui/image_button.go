@@ -66,15 +66,9 @@ func NewImageButton(normalImgPath string) (*ImageButton, error) {
 	b.Panel.Add(b.image)
 
 	// Subscribe to panel events
-	// b.Panel.Subscribe(OnKeyDown, b.onKey)
-	// b.Panel.Subscribe(OnKeyUp, b.onKey)
-	// b.Panel.Subscribe(OnMouseUp, b.onMouse)
 	b.Panel.Subscribe(moblie.SystemTouch, b.onMouse)
-	// b.Panel.Subscribe(OnCursor, b.onCursor)
-	// b.Panel.Subscribe(OnCursorEnter, b.onCursor)
-	// b.Panel.Subscribe(OnCursorLeave, b.onCursor)
 	b.Panel.Subscribe(OnEnable, func(name string, ev interface{}) { b.update() })
-	// b.Panel.Subscribe(OnResize, func(name string, ev interface{}) { b.recalc() })
+	b.Panel.Subscribe(OnResize, func(name string, ev interface{}) { b.recalc() })
 
 	b.recalc()
 	b.update()
@@ -182,6 +176,7 @@ func (b *ImageButton) onCursor(evname string, ev interface{}) {
 
 // onMouseEvent process subscribed mouse events
 func (b *ImageButton) onMouse(evname string, ev interface{}) {
+	// fmt.Println("torch !!!!!!!")
 
 	mev := ev.(*moblie.TouchEvent)
 
@@ -193,6 +188,7 @@ func (b *ImageButton) onMouse(evname string, ev interface{}) {
 		b.update()
 		b.Dispatch(OnClick, nil)
 	case moblie.TypeEnd:
+		b.root.ClearKeyFocus()
 		b.pressed = false
 		b.update()
 	default:
@@ -223,6 +219,8 @@ func (b *ImageButton) onMouse(evname string, ev interface{}) {
 
 // update updates the button visual state
 func (b *ImageButton) update() {
+
+	// fmt.Println(b.stateImages)
 
 	if !b.Enabled() {
 		if b.stateImages[ButtonDisabled] != nil {

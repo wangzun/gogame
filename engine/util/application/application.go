@@ -113,7 +113,7 @@ func Create(ops Options) (*Application, error) {
 	app.log = logger.New(ops.LogPrefix, nil)
 	app.log.AddWriter(logger.NewConsole(true))
 	go func() {
-		nnet, err := logger.NewNet("tcp", "192.168.1.4:6666")
+		nnet, err := logger.NewNet("tcp", "192.168.1.40:6666")
 		if err == nil {
 			app.log.AddWriter(nnet)
 			app.log.Info("init net log succ")
@@ -122,64 +122,16 @@ func Create(ops Options) (*Application, error) {
 	app.log.SetFormat(logger.FTIME | logger.FMICROS)
 	app.log.SetLevel(ops.LogLevel)
 
-	// app.InitGls(mobileApp.GetContext())
-
-	// Get the window manager
-	// Create OpenGL state
-	// gl, err := gls.New()
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// app.gl = gl
-	// // Checks OpenGL errors
-	// app.gl.SetCheckErrors(!*app.noglErrors)
-
-	// Logs OpenGL version
-	// glVersion := app.Gl().GetString(gls.VERSION)
-	// app.log.Info("OpenGL version: %s", glVersion)
-
-	// Clears the screen
-	// cc := math32.NewColor("gray")
-	// app.gl.ClearColor(cc.R, cc.G, cc.B, 1)
-	// app.gl.Clear(gls.DEPTH_BUFFER_BIT | gls.STENCIL_BUFFER_BIT | gls.COLOR_BUFFER_BIT)
-
-	// Creates perspective camera
-	// aspect := float32(width) / float32(height)
-	// aspect := float32(750) / float32(1334)
-	// app.camPersp = camera.NewPerspective(65, aspect, 0.01, 1000)
-
-	// // Creates orthographic camera
-	// app.camOrtho = camera.NewOrthographic(-2, 2, 2, -2, 0.01, 100)
-	// app.camOrtho.SetPosition(0, 0, 3)
-	// app.camOrtho.LookAt(&math32.Vector3{0, 0, 0})
-	// app.camOrtho.SetZoom(1.0)
-
-	// // Default camera is perspective
-	// app.camera = app.camPersp
-
-	// Creates orbit camera control
-	// It is important to do this after the root panel subscription
-	// to avoid GUI events being propagated to the orbit control.
-	// app.orbit = control.NewOrbitControl(app.camera, app.win)
-
 	app.CreateCamera()
 	// Creates scene for 3D objects
 	app.scene = core.NewNode()
 
-	// Creates renderer
-	// app.renderer = renderer.NewRenderer(gl)
-	// err = app.renderer.AddDefaultShaders()
-	// if err != nil {
-	// 	return nil, fmt.Errorf("Error from AddDefaulShaders:%v", err)
-	// }
-	// app.renderer.SetScene(app.scene)
 	// Create frame rater
 	app.frameRater = NewFrameRater(*app.targetFPS)
 
 	app.moblie = moblie.NewMoblie()
 	app.guiroot = gui.NewRoot(app.moblie)
 	app.guiroot.SetColor(math32.NewColor("silver"))
-
 	// Sets the default window resize event handler
 	return app, nil
 }
@@ -263,17 +215,17 @@ func (app *Application) SetCamera(cam camera.ICamera) {
 	app.camera = cam
 }
 
-// // Orbit returns the current camera orbit control
-// func (app *Application) Orbit() *control.OrbitControl {
+// Orbit returns the current camera orbit control
+func (app *Application) Orbit() *control.OrbitControl {
 
-// 	return app.orbit
-// }
+	return app.orbit
+}
 
-// // SetOrbit sets the camera orbit control
-// func (app *Application) SetOrbit(oc *control.OrbitControl) {
+// SetOrbit sets the camera orbit control
+func (app *Application) SetOrbit(oc *control.OrbitControl) {
 
-// 	app.orbit = oc
-// }
+	app.orbit = oc
+}
 
 // FrameRater returns the FrameRater object
 func (app *Application) FrameRater() *FrameRater {
@@ -395,12 +347,7 @@ func (app *Application) Loop() error {
 		return nil
 	}
 
-	defer func() {
-		if err := recover(); err != nil {
-			str := fmt.Sprintln(err)
-			app.log.Error("recover err : %s", str)
-		}
-	}()
+	app.moblie.Frame()
 
 	app.frameRater.Start()
 
@@ -427,7 +374,6 @@ func (app *Application) Loop() error {
 		}
 	}
 
-	// fmt.Println("rendered ", rendered)
 	// Poll input events and process them
 	// Dispatch after render event
 	app.Dispatch(OnAfterRender, nil)
@@ -475,15 +421,17 @@ func (app *Application) InitGls(glctx gl.Context) {
 	app.log.Info("OpenGL version: %s", glVersion)
 
 	// // Clears the screen
+	// app.gl.Viewport(0, 0, int32(app.moblie.WidthPx), int32(app.moblie.HeightPx))
 	app.ClearUI()
 
 	// Creates orbit camera control
 	// It is important to do this after the root panel subscription
 	// to avoid GUI events being propagated to the orbit control.
-	// app.orbit = control.NewOrbitControl(app.camera, app.win)
 	if app.control {
 		app.orbit = control.NewOrbitControl(app.camera, app.moblie)
 	}
+
+	app.guiroot.SetGs(gs)
 
 	// Creates renderer
 	app.renderer = renderer.NewRenderer(gs)
@@ -492,7 +440,6 @@ func (app *Application) InitGls(glctx gl.Context) {
 		app.log.Error("Error from AddDefaulShaders:%v", err)
 		panic(err)
 	}
-
 	app.renderer.SetScene(app.scene)
 	app.renderer.SetGui(app.guiroot)
 

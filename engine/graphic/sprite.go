@@ -83,7 +83,6 @@ func (s *Sprite) RenderSetup(gs *gls.GLS, rinfo *core.RenderInfo) {
 	mvpm.MultiplyMatrices(&rinfo.ProjMatrix, &mvmNew)
 	location := s.uniMVPM.Location(gs)
 	// gs.UniformMatrix4fv(location, 1, false, &mvpm[0])
-
 	gs.UniformMatrix4fv(gl.Uniform{Value: location}, 1, false, mvpm[:])
 }
 

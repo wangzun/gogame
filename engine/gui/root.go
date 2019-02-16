@@ -5,18 +5,20 @@
 package gui
 
 import (
+	"fmt"
 	"sort"
 
 	"github.com/wangzun/gogame/engine/core"
+	"github.com/wangzun/gogame/engine/gls"
 
 	"github.com/wangzun/gogame/engine/moblie"
 )
 
 // Root is the container and dispatcher of panel events
 type Root struct {
-	Panel             // embedded panel
-	core.TimerManager // embedded TimerManager
-	// gs                *gls.GLS // OpenGL state
+	Panel                      // embedded panel
+	core.TimerManager          // embedded TimerManager
+	gs                *gls.GLS // OpenGL state
 	// win               window.IWindow // Window
 	moblie          *moblie.Moblie
 	stopPropagation int      // stop event propagation bitmask
@@ -40,19 +42,28 @@ const (
 // func NewRoot(gs *gls.GLS, win window.IWindow) *Root {
 // func NewRoot(gs *gls.GLS, moblie *moblie.Moblie) *Root {
 // func NewRoot(gs *gls.GLS, win window.IWindow) *Root {
-func NewRoot(moblie *moblie.Moblie) *Root {
+func NewRoot(m *moblie.Moblie) *Root {
 
 	r := new(Root)
 	// r.gs = gs
-	r.moblie = moblie
+	r.moblie = m
 	r.root = r
 	r.Panel.Initialize(0, 0)
 	r.TimerManager.Initialize()
 
 	// Set the size of the root panel based on the window framebuffer size
-	r.SetSize(float32(moblie.WidthPx), float32(moblie.HeightPx))
-	r.width = float32(moblie.WidthPx)
-	r.height = float32(moblie.HeightPx)
+	r.SetSize(float32(m.WidthPx), float32(m.HeightPx))
+	r.width = float32(m.WidthPx)
+	r.height = float32(m.HeightPx)
+
+	r.moblie.Subscribe(moblie.SystemSize, func(evname string, ev interface{}) {
+		sizeEvent := ev.(*moblie.SizeEvent)
+		r.SetSize(float32(sizeEvent.WidthPx), float32(sizeEvent.HeightPx))
+		r.width = float32(sizeEvent.WidthPx)
+		r.height = float32(sizeEvent.HeightPx)
+	})
+
+	// fmt.Println("root width height : ", r.width, r.height)
 
 	// For optimization, set this root panel as not renderable as in most cases
 	// it is used only as a container
@@ -62,6 +73,10 @@ func NewRoot(moblie *moblie.Moblie) *Root {
 	r.SubscribeMoblie()
 	r.targets = []IPanel{}
 	return r
+}
+
+func (r *Root) SetGs(gs *gls.GLS) {
+	r.gs = gs
 }
 
 func (r *Root) GetWH() (float32, float32) {
@@ -76,10 +91,10 @@ func (r *Root) SubscribeMoblie() {
 	// r.win.Subscribe(window.OnKeyRepeat, r.onKey)
 	// r.win.Subscribe(window.OnChar, r.onChar)
 	// r.moblie.Subscribe(window.OnMouseUp, r.onMouse)
-	r.moblie.Subscribe(moblie.SystemTouch, r.onMouse)
+	r.moblie.Subscribe(moblie.SystemTouch, r.onTouch)
 	// r.win.Subscribe(window.OnCursor, r.onCursor)
 	// r.win.Subscribe(window.OnScroll, r.onScroll)
-	// r.moblie.Subscribe(window.OnFrame, r.onFrame)
+	r.moblie.Subscribe(moblie.SystemFrame, r.onFrame)
 }
 
 // Add adds the specified panel to the root container list of children
@@ -263,7 +278,7 @@ func (r *Root) StopPropagation(events int) {
 // }
 
 // onMouse is called when mouse button events are received
-func (r *Root) onMouse(evname string, ev interface{}) {
+func (r *Root) onTouch(evname string, ev interface{}) {
 
 	mev := ev.(*moblie.TouchEvent)
 	r.sendPanels(mev.X, mev.Y, evname, ev)
@@ -280,13 +295,8 @@ func (r *Root) onMouse(evname string, ev interface{}) {
 // which contain the specified screen position
 func (r *Root) sendPanels(x, y float32, evname string, ev interface{}) {
 
-	// Apply scale of window (for HiDPI support)
-	// sX64, sY64 := r.Window().Scale()
-	x /= float32(r.width)
-	y /= float32(r.height)
-
 	mev := ev.(*moblie.TouchEvent)
-
+	fmt.Println("touch : ", mev)
 	// If there is panel with MouseFocus send only to this panel
 	if r.mouseFocus != nil {
 		// Checks modal panel
@@ -313,7 +323,9 @@ func (r *Root) sendPanels(x, y float32, evname string, ev interface{}) {
 			return
 		}
 		// Checks if this panel contains the mouse position
+		// fmt.Println("pan size : ", pan.Position().Z, pan.pospix, pan.width, pan.height, pan.marginSizes)
 		found := pan.InsideBorders(x, y)
+		// fmt.Println("found ", found)
 		if found {
 			r.targets = append(r.targets, ipan)
 		} else {
@@ -337,6 +349,7 @@ func (r *Root) sendPanels(x, y float32, evname string, ev interface{}) {
 	}
 
 	// Checks all children of this root node
+	// fmt.Println("root children touch : ", len(r.targets))
 	for _, iobj := range r.Node.Children() {
 		ipan, ok := iobj.(IPanel)
 		if !ok {

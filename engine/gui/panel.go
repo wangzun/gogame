@@ -955,6 +955,8 @@ func (p *Panel) RenderSetup(gs *gls.GLS, rinfo *core.RenderInfo) {
 	var mm math32.Matrix4
 	p.SetModelMatrix(gs, &mm)
 
+	// mm := math32.NewMatrix4()
+
 	// Transfer model matrix uniform
 	location := p.uniMatrix.Location(gs)
 	// gl.UniformMatrix4fv(location, 1, false, &mm[0])
@@ -963,7 +965,7 @@ func (p *Panel) RenderSetup(gs *gls.GLS, rinfo *core.RenderInfo) {
 
 	// Transfer panel parameters combined uniform
 	location = p.uniPanel.Location(gs)
-	const vec4count = 8
+	// const vec4count = 8
 	// gl.Uniform4fvUP(location, vec4count, unsafe.Pointer(&p.udata))
 
 	data := []float32{
@@ -1000,6 +1002,7 @@ func (p *Panel) RenderSetup(gs *gls.GLS, rinfo *core.RenderInfo) {
 		p.udata.dummy[1],
 		p.udata.dummy[2],
 	}
+
 	gs.Uniform4fv(gl.Uniform{Value: location}, data)
 
 }
@@ -1009,11 +1012,15 @@ func (p *Panel) SetModelMatrix(gl *gls.GLS, mm *math32.Matrix4) {
 
 	// Get scale of window (for HiDPI support)
 	// sX64, sY64 := p.Root().Window().Scale()
-	sX := float32(p.width)
-	sY := float32(p.height)
+	sX := float32(1)
+	sY := float32(1)
 
 	// Get the current viewport width and height
-	_, _, width, height := gl.GetViewport()
+	// _, _, width, height := gl.GetViewport()
+	width := p.root.moblie.WidthPx
+	height := p.root.moblie.HeightPx
+	// _, _, width, height := 0, 0, 750, 1334
+
 	fwidth := float32(width) / sX
 	fheight := float32(height) / sY
 

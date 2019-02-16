@@ -68,6 +68,8 @@ void main() {
     // Bounds[1] - ymin
     // Bounds[2] - xmax
     // Bounds[3] - ymax
+
+    // gl_FragColor = vec4(0,0,1,0);
     if (FragTexcoord.x <= Bounds[0] || FragTexcoord.x >= Bounds[2]) {
         discard;
     }
@@ -126,6 +128,6 @@ void main() {
 
     // Fragment is in margins area (always transparent)
     // FragColor = vec4(1,1,1,0);
-    gl_FragColor = vec4(1,1,1,0);
+    gl_FragColor = vec4(0,1,1,0);
 }
 

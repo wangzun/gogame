@@ -381,7 +381,8 @@ func (r *Renderer) renderScene(iscene core.INode, icam camera.ICamera) error {
 			width, height := r.panel3D.GetPanel().Size()
 
 			// Get scale of window (for HiDPI support)
-			sX64, sY64 := r.panel3D.Root().GetWH()
+			// sX64, sY64 := r.panel3D.Root().GetWH()
+			sX64, sY64 := 1, 1
 
 			sX := float32(sX64)
 			sY := float32(sY64)
@@ -474,6 +475,7 @@ func (r *Renderer) renderGui() error {
 
 	// If no 3D scene was rendered sets Gui panels as renderable for background
 	// User must define the colors
+
 	if (len(r.rgraphics) == 0) && (len(r.cgraphics) == 0) {
 		r.panelGui.SetRenderable(true)
 		if r.panel3D != nil {
@@ -506,7 +508,6 @@ func (r *Renderer) renderGui() error {
 	if len(r.panList) == 0 {
 		return nil
 	}
-
 	// Updates panels bounds and relative positions
 	r.panelGui.GetPanel().UpdateMatrixWorld()
 	// Disable the scissor test which could have been set by the 3D scene renderer

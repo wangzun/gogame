@@ -21,9 +21,14 @@ const SystemForeground = "moblie.SystemForeground"
 const SystemBackground = "moblie.SystemBackground"
 const SystemTouch = "moblie.SystemTouch"
 const SystemSize = "moblie.SystemSize"
+const SystemFrame = "moblie.SystemFrame"
 
 func NewMoblie() *Moblie {
 	m := &Moblie{}
+	m.WidthPx = 750
+	m.HeightPx = 1334
+	// m.WidthPx = 1200
+	// m.HeightPx = 1550
 	m.Dispatcher.Initialize()
 	return m
 }
@@ -59,8 +64,6 @@ const (
 
 func (m *Moblie) Run() {
 	app.Main(func(a app.App) {
-		// var sz size.Event
-		// var glctx gl.Context
 		for e := range a.Events() {
 			switch e := a.Filter(e).(type) {
 			case lifecycle.Event:
@@ -92,9 +95,6 @@ func (m *Moblie) Run() {
 				m.WidthPx = e.WidthPx
 				m.HeightPx = e.HeightPx
 				m.Dispatch(SystemSize, se)
-				// //sz = e
-				//touchX = float32(sz.WidthPx / 2)
-				//touchY = float32(sz.HeightPx / 2)
 			case paint.Event:
 				if e.External {
 					continue
@@ -102,8 +102,6 @@ func (m *Moblie) Run() {
 			case touch.Event:
 				te := &TouchEvent{X: e.X, Y: e.Y, Sequence: int64(e.Sequence), Type: Type(e.Type)}
 				m.Dispatch(SystemTouch, te)
-				// //touchX = e.X
-				//touchY = e.Y
 			}
 		}
 	})
@@ -111,5 +109,8 @@ func (m *Moblie) Run() {
 
 func (m *Moblie) Publish() {
 	m.mApp.Publish()
+}
 
+func (m *Moblie) Frame() {
+	m.Dispatch(SystemFrame, nil)
 }

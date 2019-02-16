@@ -306,7 +306,7 @@ func (grmat *GraphicMaterial) Render(gs *gls.GLS, rinfo *core.RenderInfo) {
 
 	geom := gr.igeom.GetGeometry()
 	indices := geom.Indices()
-	// fmt.Println(indices.Size(), gr.mode)
+	// fmt.Println("render draw : ", indices.Size(), gr.mode)
 	// Indexed geometry
 	if indices.Size() > 0 {
 		if count == 0 {

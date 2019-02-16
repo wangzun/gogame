@@ -295,6 +295,7 @@ func (vbo *VBO) StrideSize() int {
 func (vbo *VBO) Transfer(gs *GLS) {
 
 	// If the VBO buffer is empty, ignore
+	// fmt.Println(vbo.buffer)
 	if vbo.buffer.Bytes() == 0 {
 		return
 	}
@@ -309,9 +310,7 @@ func (vbo *VBO) Transfer(gs *GLS) {
 		for _, attrib := range vbo.attribs {
 			// Get attribute location in the current program
 			loc := gs.prog.GetAttribLocation(attrib.Name)
-			// fmt.Println(loc, attrib.Name)
-			// fmt.Println(vbo.buffer)
-			fmt.Println(int(loc.Value), attrib)
+			fmt.Println("loc , attrib :", int(loc.Value), attrib)
 			if int(loc.Value) < 0 {
 				fmt.Println("Attribute not found : ", attrib.Name)
 				continue
