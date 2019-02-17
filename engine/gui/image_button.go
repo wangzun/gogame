@@ -186,11 +186,12 @@ func (b *ImageButton) onMouse(evname string, ev interface{}) {
 		b.root.SetKeyFocus(b)
 		b.pressed = true
 		b.update()
-		b.Dispatch(OnClick, nil)
+		b.Dispatch(OnClick, ev)
 	case moblie.TypeEnd:
 		b.root.ClearKeyFocus()
 		b.pressed = false
 		b.update()
+		b.Dispatch(OnClick, ev)
 	default:
 		return
 	}

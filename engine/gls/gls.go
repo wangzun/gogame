@@ -180,8 +180,16 @@ func (gs *GLS) setDefaultState() {
 	gs.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
 	// gs.Enable(gl.VERTEX_PROGRAM_POINT_SIZE)
 	// gs.Enable(gl.PROGRAM_POINT_SIZE)
-	// gs.Enable(MULTISAMPLE)
+	// gs.Hint(LINE_SMOOTH, NICEST)
+	// gs.Enable(LINE_SMOOTH)
+	// gs.Hint(POLYGON_SMOOTH, NICEST)
+	// gs.Enable(POLYGON_SMOOTH)
+	gs.Enable(MULTISAMPLE)
+	// gs.Hint(SAMPLE_BUFFERS, 4)
+	// gs.Hint(SAMPLES, 4)
 	gs.Enable(gl.POLYGON_OFFSET_FILL)
+
+	// fmt.Printf("sample buffers %d", gs.GetInteger(SAMPLES))
 	// gs.Enable(gl.POLYGON_OFFSET_LINE)
 	// gs.Enable(gl.POLYGON_OFFSET_POINT)
 }
@@ -192,6 +200,11 @@ func (gs *GLS) Stats(s *Stats) {
 
 	*s = gs.stats
 	s.Shaders = len(gs.programs)
+}
+
+func (gs *GLS) Hint(target, mode gl.Enum) {
+	gs.context.Hint(target, mode)
+	gs.DoCheck()
 }
 
 // ActiveTexture selects which texture unit subsequent texture state calls
@@ -600,6 +613,13 @@ func (gs *GLS) GetString(name gl.Enum) string {
 
 	// cs := C.glGetString(C.GLenum(name))
 	// return C.GoString((*C.char)(unsafe.Pointer(cs)))
+}
+
+func (gs *GLS) GetInteger(name gl.Enum) int {
+
+	str := gs.context.GetInteger(name)
+	gs.DoCheck()
+	return str
 }
 
 // GetUniformLocation returns the location of a uniform variable for the specified program.
