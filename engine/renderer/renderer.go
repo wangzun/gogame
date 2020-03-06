@@ -313,6 +313,7 @@ func (r *Renderer) renderScene(iscene core.INode, icam camera.ICamera) error {
 
 		// Append all graphic materials of this graphic to list of graphic materials to be rendered
 		materials := gr.Materials()
+		// fmt.Println("mmmmmmmmmmmmm : ", len(materials))
 		for i := 0; i < len(materials); i++ {
 			if materials[i].IMaterial().GetMaterial().Transparent() {
 				r.grmatsTransp = append(r.grmatsTransp, &materials[i])
@@ -412,6 +413,7 @@ func (r *Renderer) renderScene(iscene core.INode, icam camera.ICamera) error {
 	var renderGraphicMaterials func(grmats []*graphic.GraphicMaterial)
 	renderGraphicMaterials = func(grmats []*graphic.GraphicMaterial) {
 		// For each *GraphicMaterial
+		// fmt.Println("dddddddd : ", len(grmats))
 		for _, grmat := range grmats {
 			mat := grmat.IMaterial().GetMaterial()
 			geom := grmat.IGraphic().GetGeometry()
@@ -430,6 +432,7 @@ func (r *Renderer) renderScene(iscene core.INode, icam camera.ICamera) error {
 			r.specs.MatTexturesMax = mat.TextureCount()
 
 			// Set active program and apply shader specs
+
 			_, err = r.shaman.SetProgram(&r.specs)
 			if err != nil {
 				return

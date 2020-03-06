@@ -44,7 +44,7 @@ func (t *TankTest) Initialize(a *application.Application) {
 	l1.SetPosition(10, 10, 10)
 	a.Scene().Add(l1)
 
-	// Show grid helper
+	// // Show grid helper
 	grid := graphic.NewGridHelper(100, 1, &math32.Color{0.4, 0.4, 0.4})
 	a.Scene().Add(grid)
 

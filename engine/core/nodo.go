@@ -550,6 +550,7 @@ func (n *Node) RotateOnAxis(axis *math32.Vector3, angle float32) {
 	var rotQuat math32.Quaternion
 	rotQuat.SetFromAxisAngle(axis, angle)
 	n.QuaternionMult(&rotQuat)
+	n.matNeedsUpdate = true
 }
 
 // RotateX rotates around the local X axis the specified angle in radians.

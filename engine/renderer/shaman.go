@@ -257,6 +257,7 @@ func (sm *Shaman) preprocess(source string, defines map[string]string) (string, 
 	if defines != nil { // This is only true for the outer call
 		prefix = fmt.Sprintf("#version %s\n", GLSL_VERSION)
 		for name, value := range defines {
+			fmt.Printf("#define %s %s\n", name, value)
 			prefix = prefix + fmt.Sprintf("#define %s %s\n", name, value)
 		}
 	}

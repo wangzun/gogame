@@ -140,9 +140,9 @@ const include_morphtarget_vertex_source = `#ifdef MORPHTARGETS
 #endif
 `
 
-const include_morphtarget_vertex_declaration2_source = `	in vec3 MorphPosition{i};
+const include_morphtarget_vertex_declaration2_source = `	varying vec3 MorphPosition{i};
   #ifdef MORPHTARGETS_NORMAL
-	in vec3 MorphNormal{i};
+	varying vec3 MorphNormal{i};
   #endif
 `
 
@@ -1178,7 +1178,6 @@ void main() {
     // gl_FragColor = vec4(vec3(baseColor1), 1.0);
     // gl_FragColor = uBaseColor;
     gl_FragColor = vec4(pow(color,vec3(1.0/2.2)), baseColor.a);
-    // gl_FragColor = vec4(Position, baseColor.a);
 }
 
 

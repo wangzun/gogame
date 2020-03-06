@@ -4,6 +4,8 @@
 
 package math32
 
+import "fmt"
+
 // Vector3 is a 3D vector/point with X, Y and Z components.
 type Vector3 struct {
 	X float32
@@ -573,6 +575,7 @@ func (v *Vector3) Reflect(normal *Vector3) *Vector3 {
 func (v *Vector3) AngleTo(other *Vector3) float32 {
 
 	theta := v.Dot(other) / (v.Length() * other.Length())
+	fmt.Println(theta)
 	// clamp, to handle numerical problems
 	return Acos(Clamp(theta, -1, 1))
 }
@@ -642,12 +645,12 @@ func (v *Vector3) SetFromQuaternion(q *Quaternion) *Vector3 {
 // RandomTangents computes and returns two arbitrary tangents to the vector.
 func (v *Vector3) RandomTangents() (*Vector3, *Vector3) {
 
-	t1 := NewVector3(0,0,0)
-	t2 := NewVector3(0,0,0)
+	t1 := NewVector3(0, 0, 0)
+	t2 := NewVector3(0, 0, 0)
 	length := v.Length()
 	if length > 0 {
 		n := NewVector3(v.X/length, v.Y/length, v.Z/length)
-		randVec := NewVector3(0,0,0)
+		randVec := NewVector3(0, 0, 0)
 		if Abs(n.X) < 0.9 {
 			randVec.SetX(1)
 			t1.CrossVectors(n, randVec)
@@ -671,10 +674,10 @@ func (v *Vector3) RandomTangents() (*Vector3, *Vector3) {
 // AlmostEquals returns whether the vector is almost equal to another vector within the specified tolerance.
 func (v *Vector3) AlmostEquals(other *Vector3, tolerance float32) bool {
 
-	if (Abs(v.X - other.X) < tolerance) &&
-		(Abs(v.Y - other.Y) < tolerance) &&
-		(Abs(v.Z - other.Z) < tolerance) {
-			return true
+	if (Abs(v.X-other.X) < tolerance) &&
+		(Abs(v.Y-other.Y) < tolerance) &&
+		(Abs(v.Z-other.Z) < tolerance) {
+		return true
 	}
 	return false
 }

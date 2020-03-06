@@ -732,6 +732,7 @@ func (g *GLTF) LoadTexture(texIdx int) (*texture.Texture2D, error) {
 	texData := g.Textures[texIdx]
 	// NOTE: Textures can't be cached because they have their own uniforms
 	log.Debug("Loading Texture %d", texIdx)
+	// fmt.Println("Loading Texture %d", texIdx)
 
 	// Load texture image
 	img, err := g.LoadImage(texData.Source)
@@ -851,13 +852,13 @@ func (g *GLTF) LoadImage(imgIdx int) (*image.RGBA, error) {
 // bytesToArrayU32 converts a byte array to ArrayU32.
 func (g *GLTF) bytesToArrayU32(data []byte, componentType, count int) (math32.ArrayU32, error) {
 
-	if count > (1 << 16) {
+	if count > (1 << 24) {
 		return nil, fmt.Errorf("count too large :%v", count)
 	}
 	// If component is UNSIGNED_INT nothing to do
 	if componentType == UNSIGNED_INT {
 		// arr := (*[1 << 30]uint32)(unsafe.Pointer(&data[0]))[:count]
-		arr := (*[1 << 16]uint32)(unsafe.Pointer(&data[0]))[:count]
+		arr := (*[1 << 24]uint32)(unsafe.Pointer(&data[0]))[:count]
 		return math32.ArrayU32(arr), nil
 	}
 
@@ -888,7 +889,7 @@ func (g *GLTF) bytesToArrayF32(data []byte, componentType, count int) (math32.Ar
 	// If component is UNSIGNED_INT nothing to do
 	if componentType == UNSIGNED_INT {
 		// arr := (*[1 << 30]float32)(unsafe.Pointer(&data[0]))[:count]
-		arr := (*[1 << 16]float32)(unsafe.Pointer(&data[0]))[:count]
+		arr := (*[1 << 24]float32)(unsafe.Pointer(&data[0]))[:count]
 		return math32.ArrayF32(arr), nil
 	}
 
@@ -911,7 +912,7 @@ func (g *GLTF) bytesToArrayF32(data []byte, componentType, count int) (math32.Ar
 	}
 
 	// return (*[1 << 30]float32)(unsafe.Pointer(&data[0]))[:count], nil
-	return (*[1 << 16]float32)(unsafe.Pointer(&data[0]))[:count], nil
+	return (*[1 << 24]float32)(unsafe.Pointer(&data[0]))[:count], nil
 }
 
 // loadAccessorU32 loads data from the specified accessor and performs validation of the Type and ComponentType.
